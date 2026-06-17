@@ -1,0 +1,28 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.uv-cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Env
+.env
+.env.local
+*.local
+
+# OS / Editor
+.DS_Store
+.idea/
+.vscode/
+
+# Node (defensive — Node 文件应位于 web/ 子模块内)
+node_modules/
+
+# Logs
+*.log
