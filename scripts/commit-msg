@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+# Conventional-Commit 中文提交信息校验
+# 安装方式：bash scripts/install-hooks.sh
+#
+# 规范：<type>(<scope>): <subject>
+#   - type 来自固定枚举（feat/fix/docs/style/refactor/perf/test/chore/build/ci/revert）
+#   - scope 可选，圆括号包裹
+#   - 末尾可加 `!` 表示破坏性变更
+#   - 冒号后有一个空格
+#   - subject 非空、不以句号结尾
+#
+# 详细文档见 docs/COMMIT_CONVENTION.md
+
+set -u
+
+MSG_FILE="${1:-}"
+if [[ -z "$MSG_FILE" || ! -f "$MSG_FILE" ]]; then
+  echo "commit-msg hook: 未收到提交信息文件" >&2
+  exit 1
+fi
+
+# 第一行（去除可能的尾部空白/CR）
+FIRST_LINE="$(sed -n '1p' "$MSG_FILE" | tr -d '\r' | sed -E 's/[[:space:]]+$//')"
+
+# 跳过 merge / revert / fixup / squash / 自动生成的提交
+case "$FIRST_LINE" in
+  Merge\ * | Revert\ * | "fixup! "* | "squash! "* | "amend! "* )
+    exit 0
+    ;;
+esac
+
+# 允许的 type 列表
+TYPES='feat|fix|docs|style|refactor|perf|test|chore|build|ci|revert'
+
+# 正则：
+#   ^(type)
+#   (\([^)]+\))?  scope 可选
+#   !?             破坏性可选
+#   :\             冒号空格
+#   .{1,}          subject 至少 1 字符
+#   不允许行末是 . 。 ！ 等收尾标点
+REGEX="^(${TYPES})(\([^)]+\))?!?: .+[^。.！!]$"
+
+if [[ "$FIRST_LINE" =~ $REGEX ]]; then
+  exit 0
+fi
+
+cat >&2 <<EOF
+
+✗ 提交信息不符合规范：
+    "$FIRST_LINE"
+
+格式：<type>(<scope>): <subject>
+  - type 必须是: feat | fix | docs | style | refactor | perf | test | chore | build | ci | revert
+  - scope 可选，圆括号包裹
+  - 末尾可加 ! 表示破坏性变更
+  - 冒号后必须有一个空格
+  - subject 末尾不要句号
+
+示例：
+  feat(tool/jwt): 新增 JWT 解码工具
+  fix(api): 修复 file-convert 大文件超时
+  refactor(toolbox): 后端拆分为 thin app + tools/file_convert
+  docs: 补充提交规范说明
+
+详细说明见 docs/COMMIT_CONVENTION.md
+
+EOF
+exit 1
