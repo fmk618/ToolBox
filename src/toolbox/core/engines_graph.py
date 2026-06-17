@@ -1,12 +1,12 @@
 from collections import deque
 
-from .core.errors import NoConversionPathError
-from .engines.base import Engine
-from .engines.docling import DoclingEngine
-from .engines.libreoffice import LibreOfficeEngine
-from .engines.markitdown import MarkItDownEngine
-from .engines.pandoc import PandocEngine
-from .engines.vision_llm import VisionLLMEngine
+from .errors import NoConversionPathError
+from ..engines.base import Engine
+from ..engines.docling import DoclingEngine
+from ..engines.libreoffice import LibreOfficeEngine
+from ..engines.markitdown import MarkItDownEngine
+from ..engines.pandoc import PandocEngine
+from ..engines.vision_llm import VisionLLMEngine
 
 # Order matters: earlier engines win when multiple engines claim the same edge.
 # Vision LLM > Docling > MarkItDown for PDF→MD

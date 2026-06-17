@@ -2,7 +2,7 @@ import tempfile
 from pathlib import Path
 
 from .detect import detect_format
-from ..router import find_path
+from .engines_graph import find_path
 
 
 def convert(src: Path, dst: Path, dst_fmt: str | None = None) -> list[str]:
