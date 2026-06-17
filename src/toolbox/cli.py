@@ -6,7 +6,7 @@ from rich.table import Table
 
 from .core.errors import ToolboxError
 from .core.pipeline import convert
-from .router import ENGINES, build_graph
+from .core.engines_graph import ENGINES, build_graph
 
 app = typer.Typer(
     help="Toolbox — universal file format converter (PDF / Word / Markdown / ...)",
