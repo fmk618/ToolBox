@@ -17,6 +17,12 @@ dependencies = [
     "python-dotenv>=1.2.2",
 ]
 
+[project.optional-dependencies]
+# opendataloader-pdf 引擎需要 JVM（Java 11+）。本地不想装 JDK 的话别勾，
+# 引擎自动跳过；商用 Docker 镜像里默认装上拿 benchmark 第一档精度。
+#   uv sync --extra pdf-pro
+pdf-pro = ["opendataloader-pdf>=0.1.0"]
+
 [project.scripts]
 toolbox = "toolbox.cli:app"
 

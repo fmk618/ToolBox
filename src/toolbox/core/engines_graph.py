@@ -5,15 +5,21 @@ from ..engines.base import Engine
 from ..engines.docling import DoclingEngine
 from ..engines.libreoffice import LibreOfficeEngine
 from ..engines.markitdown import MarkItDownEngine
+from ..engines.opendataloader import OpenDataLoaderEngine
 from ..engines.pandoc import PandocEngine
 from ..engines.vision_llm import VisionLLMEngine
 
 # Order matters: earlier engines win when multiple engines claim the same edge.
-# Vision LLM > Docling > MarkItDown for PDF→MD
-# (cloud vision model > local ML layout > raw text extraction).
-# VisionLLMEngine is auto-skipped when no provider/key is configured.
+# Vision LLM > OpenDataLoader > Docling > MarkItDown for PDF→MD
+# (cloud vision model > local Java parser w/ benchmark #1 > local ML layout
+#  > raw text extraction).
+# Each engine is auto-skipped when its dependency is missing:
+#   VisionLLM ← provider/key configured in /settings/llm
+#   OpenDataLoader ← Java 11+ on PATH + opendataloader-pdf Python package
+#   Docling / MarkItDown ← pure Python deps from pyproject
 ENGINES: list[Engine] = [
     VisionLLMEngine(),
+    OpenDataLoaderEngine(),
     DoclingEngine(),
     MarkItDownEngine(),
     PandocEngine(),

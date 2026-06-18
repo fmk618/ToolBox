@@ -27,11 +27,14 @@ ENV PYTHONUNBUFFERED=1 \
 # 系统依赖：
 # - pandoc：Markdown ↔ DOCX / HTML / EPUB / RTF 引擎
 # - libmagic1：MarkItDown 用 python-magic 嗅探格式
+# - openjdk-17-jre-headless：opendataloader-pdf 引擎需要 JVM（benchmark
+#   第一档 PDF→MD 准确率 0.907）
 # - curl / ca-certificates：拉 uv 安装脚本与 Docling 模型
 # - tini：稳健的 PID 1，转 SIGTERM 不留僵尸进程
 RUN apt-get update && apt-get install -y --no-install-recommends \
         pandoc \
         libmagic1 \
+        openjdk-17-jre-headless \
         curl \
         ca-certificates \
         tini \
@@ -47,10 +50,10 @@ WORKDIR /app
 COPY pyproject.toml uv.lock* ./
 RUN uv sync --frozen --no-install-project 2>/dev/null || uv sync --no-install-project
 
-# 再拷源码并把项目装进 venv
+# 再拷源码并把项目装进 venv（含 pdf-pro extra → opendataloader-pdf）
 COPY src ./src
 COPY README.md ./
-RUN uv sync --no-dev
+RUN uv sync --no-dev --extra pdf-pro
 
 # 运行期：非 root 用户
 RUN useradd --create-home --shell /bin/bash toolbox

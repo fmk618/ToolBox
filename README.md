@@ -14,10 +14,10 @@
 
 | 部分                  | 路径                                                           | 角色                                                                                     |
 | --------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| **Python 后端**       | `src/toolbox/`                                                 | 文件格式转换工具的运行时（CLI + HTTP API + 5 个转换引擎）                                  |
+| **Python 后端**       | `src/toolbox/`                                                 | 文件格式转换工具的运行时（CLI + HTTP API + 6 个转换引擎）                                  |
 | **Next.js Web 前端**  | [`web/`](https://github.com/fmk618/ToolBox-web)（子模块）       | 浏览器端「工具百宝箱」UI，shadcn/ui 视觉、⌘K 命令面板、本地运行 18+ 工具 + 调用后端转换 1 个 |
 
-后端架构上**不重复造轮子**：把社区里最好用的几个引擎（MarkItDown、Docling、Pandoc、LibreOffice、Vision-LLM）封装在统一接口下，用**路由图 BFS**自动选择最优转换路径。
+后端架构上**不重复造轮子**：把社区里最好用的几个引擎（Vision-LLM、opendataloader-pdf、Docling、MarkItDown、Pandoc、LibreOffice）封装在统一接口下，用**路由图 BFS**自动选择最优转换路径。
 
 ---
 
@@ -48,13 +48,13 @@
        │  core/engines_graph.py (BFS 路由) │ ← 根据 (from, to) 找最短转换链
        └──────────────┬───────────────────┘
                       ▼
-   ┌─────────────┬──────────┬────────────┬────────┬──────────────┐
-   │  Vision-LLM │  Docling │ MarkItDown │ Pandoc │ LibreOffice  │
-   │   (云端)    │  (本地)  │  (Python)  │ (子进程)│   (子进程)   │
-   └─────────────┴──────────┴────────────┴────────┴──────────────┘
+   ┌─────────────┬────────────────────┬──────────┬────────────┬────────┬──────────────┐
+   │  Vision-LLM │ opendataloader-pdf │  Docling │ MarkItDown │ Pandoc │ LibreOffice  │
+   │   (云端)    │   (Java 子进程)    │  (本地)  │  (Python)  │ (子进程)│   (子进程)   │
+   └─────────────┴────────────────────┴──────────┴────────────┴────────┴──────────────┘
 ```
 
-每个引擎自己声明能做哪些 `(源格式, 目标格式)` 边；启动时探测可用性，构建有向图；调用时 BFS 找最短路径，自动多步串联。
+每个引擎自己声明能做哪些 `(源格式, 目标格式)` 边；启动时探测可用性，构建有向图；调用时 BFS 找最短路径，自动多步串联。**任何引擎缺依赖都自动跳过，不影响其余引擎工作**。
 
 ---
 
@@ -81,15 +81,18 @@ uv sync
 
 ### 3. 安装可选系统工具（按需）
 
-| 工具          | 解锁能力                                | 安装命令（macOS）                  |
-| ------------- | --------------------------------------- | ---------------------------------- |
-| `pandoc`      | Markdown ↔ Word / HTML / EPUB / RTF     | `brew install pandoc`              |
-| `xelatex`     | Markdown → PDF 直转                     | `brew install --cask basictex`     |
-| `libreoffice` | Word / PPT / Excel → PDF                | `brew install --cask libreoffice`  |
+| 工具                          | 解锁能力                                                   | 安装命令（macOS）                                    |
+| ----------------------------- | ---------------------------------------------------------- | ---------------------------------------------------- |
+| `pandoc`                      | Markdown ↔ Word / HTML / EPUB / RTF                        | `brew install pandoc`                                |
+| `xelatex`                     | Markdown → PDF 直转                                        | `brew install --cask basictex`                       |
+| `libreoffice`                 | Word / PPT / Excel → PDF                                   | `brew install --cask libreoffice`                    |
+| `openjdk` + `pdf-pro` extra   | opendataloader-pdf 引擎（PDF→MD benchmark #1，0.907）       | `brew install openjdk@17 && uv sync --extra pdf-pro` |
 
-Linux：`apt install pandoc texlive-xetex libreoffice`。
+Linux：`apt install pandoc texlive-xetex libreoffice default-jre`。
 
 Vision-LLM 引擎（PDF → Markdown 质量最高）在前端「系统设置」里配置 OpenAI / DeepSeek / 智谱等 API Key 即可启用。
+
+> Docker 镜像默认就装好了 OpenJDK 与 `pdf-pro` extra，不需要再操心。
 
 ### 4. 启动前后端
 
@@ -172,6 +175,7 @@ toolbox/
         ├── base.py                    # 引擎抽象基类
         ├── markitdown.py              # MarkItDown 适配器（任意 → MD）
         ├── docling.py                 # Docling 适配器（本地 PDF → MD，高质量）
+        ├── opendataloader.py          # opendataloader-pdf 适配器（PDF → MD/JSON/HTML，benchmark #1）
         ├── pandoc.py                  # Pandoc 适配器（MD ↔ DOCX/HTML/...）
         ├── libreoffice.py             # LibreOffice 适配器（Office → PDF）
         └── vision_llm.py              # Vision-LLM 适配器（云端 PDF → MD/HTML）
@@ -197,15 +201,16 @@ toolbox/
 
 ## 📋 引擎说明
 
-| 引擎             | 协议      | 用途                                      | 安装方式                  |
-| ---------------- | --------- | ----------------------------------------- | ------------------------- |
-| **Vision-LLM**   | —         | 云端视觉大模型 PDF→Markdown，质量最高     | 在前端设置页填 API Key    |
-| **Docling**      | MIT       | 本地 ML 模型 PDF→Markdown，无需联网       | `uv sync` 自动装          |
-| **MarkItDown**   | MIT       | 30+ 种格式统一转 Markdown，最快           | `uv sync` 自动装          |
-| **Pandoc**       | GPL-2.0+  | Markdown 与各种格式互转，最稳的中转节点    | 系统包管理器              |
-| **LibreOffice**  | MPL-2.0   | Office 文档高保真转 PDF（事实标准）        | 系统包管理器              |
+| 引擎                    | 协议       | 用途                                                | 安装方式                                             |
+| ----------------------- | ---------- | --------------------------------------------------- | ---------------------------------------------------- |
+| **Vision-LLM**          | —          | 云端视觉大模型 PDF→Markdown，质量最高               | 前端设置页填 API Key                                 |
+| **opendataloader-pdf**  | Apache-2.0 | 本地 Java 引擎，PDF→MD benchmark #1（0.907）         | `brew install openjdk@17 && uv sync --extra pdf-pro` |
+| **Docling**             | MIT        | 本地 ML 模型 PDF→Markdown，无需联网                  | `uv sync` 自动装                                     |
+| **MarkItDown**          | MIT        | 30+ 种格式统一转 Markdown，最快                      | `uv sync` 自动装                                     |
+| **Pandoc**              | GPL-2.0+   | Markdown 与各种格式互转，最稳的中转节点               | 系统包管理器                                         |
+| **LibreOffice**         | MPL-2.0    | Office 文档高保真转 PDF（事实标准）                   | 系统包管理器                                         |
 
-> Pandoc / LibreOffice 通过子进程调用，不与本项目源码静态链接，使用上不传染 License。
+> Pandoc / LibreOffice / opendataloader-pdf 通过子进程调用（其中 opendataloader 经 JVM），不与本项目源码静态链接，使用上不传染 License。
 
 ---
 
@@ -277,8 +282,8 @@ uv run toolbox convert tests/sample.md -o /tmp/t.pdf   # 烟测通过
 底层依赖的引擎各自的 License：
 - MarkItDown — MIT
 - Docling — MIT
+- opendataloader-pdf — Apache-2.0（JVM 子进程调用，可选启用）
 - Pandoc — GPL-2.0+（子进程调用，不传染）
 - LibreOffice — MPL-2.0（子进程调用，不传染）
-- opendataloader-pdf（如启用）— Apache-2.0
 
 > 通过子进程调用的引擎不与本项目源码静态链接，其 License 不传染到 Toolbox 自身。
