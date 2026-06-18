@@ -1,7 +1,7 @@
 # Toolbox · 工具百宝箱
 
-> 一个本地优先的开发者工具集合 ——「工具百宝箱」。
-> 19+ 个常用小工具开箱即用，仅文件格式转换工具走 Python 后端。
+> 一个本地优先的常用小工具集合 ——「工具百宝箱」，面向所有人。
+> 19+ 个日常会用到的小工具开箱即用，仅文件格式转换工具走 Python 后端。
 
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-green.svg)](LICENSE)
@@ -29,7 +29,7 @@
 | 编解码   | Base64 · URL · HTML 实体                                          | 纯前端  |
 | 加密哈希 | Hash（SHA-1/256/384/512）· 密码生成 · JWT 解码                     | 纯前端  |
 | 文本工具 | JSON 格式化 · YAML⇄JSON · Markdown 预览 · Diff 对比 · 正则测试     | 纯前端  |
-| 开发辅助 | UUID v4 · 二维码生成                                              | 纯前端  |
+| 实用工具 | UUID v4 · 二维码生成                                              | 纯前端  |
 | 时间日期 | 时间戳 · 时区换算 · Cron 表达式                                    | 纯前端  |
 | 颜色数据 | Hex⇄RGB⇄HSL · WCAG 颜色对比度                                     | 纯前端  |
 | 系统设置 | 系统设置（后端地址 / Vision-LLM 配置 / 本地数据）                   | 纯前端  |
