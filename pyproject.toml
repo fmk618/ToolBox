@@ -1,7 +1,9 @@
 [project]
 name = "toolbox"
 version = "0.1.0"
-description = "Universal file format converter (PDF, Word, Markdown, etc.)"
+description = "Toolbox — 工具百宝箱：开发者常用小工具集合 + 文件格式转换"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 requires-python = ">=3.11"
 dependencies = [
     "markitdown[all]>=0.1.5",

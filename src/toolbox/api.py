@@ -6,6 +6,7 @@ warmup, LLM settings) live in this file or `core/`.
 """
 
 import logging
+import os
 import threading
 from contextlib import asynccontextmanager
 
@@ -16,6 +17,15 @@ from .core.settings_api import router as settings_router
 from .tools.file_convert import router as file_convert_router
 
 log = logging.getLogger("toolbox.api")
+
+# Comma-separated list of origins allowed to hit the API. Override in production
+# via env to your real deploy domain(s) — defaults serve local dev.
+_DEFAULT_ORIGINS = "http://localhost:3000,http://127.0.0.1:3000"
+ALLOWED_ORIGINS = [
+    o.strip()
+    for o in os.getenv("TOOLBOX_ALLOWED_ORIGINS", _DEFAULT_ORIGINS).split(",")
+    if o.strip()
+]
 
 
 def _warmup_docling():
@@ -43,7 +53,7 @@ api = FastAPI(title="Toolbox", version="0.1.0", lifespan=lifespan)
 
 api.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000", "http://127.0.0.1:3000"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_methods=["*"],
     allow_headers=["*"],
     expose_headers=["Content-Disposition"],

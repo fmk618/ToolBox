@@ -1,0 +1,37 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+dist/
+build/
+.uv-cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Env / secrets
+.env
+.env.local
+*.local
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
+
+# Git
+.git/
+.gitignore
+.gitmodules
+.gitattributes
+
+# Submodule（web 在自己的镜像里构建）
+web/
+
+# Docs / CI 不需要进镜像
+docs/
+scripts/
+*.md
+!README.md
