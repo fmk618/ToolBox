@@ -4,7 +4,7 @@
 > 19+ 个常用小工具开箱即用，仅文件格式转换工具走 Python 后端。
 
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-green.svg)](LICENSE)
 
 ---
 
@@ -209,6 +209,27 @@ toolbox/
 
 ---
 
+## 🚀 部署
+
+```bash
+git clone --recurse-submodules https://github.com/fmk618/ToolBox.git
+cd ToolBox
+docker compose up -d --build
+```
+
+`http://<server>:3000` 是 Web 前端，`http://<server>:8000` 是 Backend API。
+
+**商用域名 / HTTPS / Vercel 混合架构** 等详细方案见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)。
+
+### 关键环境变量
+
+| 变量                       | 默认                                          | 说明                                            |
+| -------------------------- | --------------------------------------------- | ----------------------------------------------- |
+| `TOOLBOX_ALLOWED_ORIGINS`  | `http://localhost:3000,http://127.0.0.1:3000`  | CORS 白名单，商用部署改成自家域名                |
+| `NEXT_PUBLIC_API_BASE`     | `http://127.0.0.1:8000`                       | 前端调用的后端地址，**构建期**注入               |
+
+---
+
 ## 🌳 分支与发布
 
 | 仓库                     | 默认 / 工作分支 | 发布约束                                          |
@@ -251,10 +272,13 @@ uv run toolbox convert tests/sample.md -o /tmp/t.pdf   # 烟测通过
 
 ## 📄 License
 
-本项目采用 **MIT License**。
+本项目采用 **Apache License 2.0**。完整许可证见 [LICENSE](LICENSE)。
 
 底层依赖的引擎各自的 License：
 - MarkItDown — MIT
 - Docling — MIT
-- Pandoc — GPL-2.0+（子进程调用）
-- LibreOffice — MPL-2.0（子进程调用）
+- Pandoc — GPL-2.0+（子进程调用，不传染）
+- LibreOffice — MPL-2.0（子进程调用，不传染）
+- opendataloader-pdf（如启用）— Apache-2.0
+
+> 通过子进程调用的引擎不与本项目源码静态链接，其 License 不传染到 Toolbox 自身。
