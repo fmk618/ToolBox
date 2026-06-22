@@ -109,7 +109,9 @@ services:
     # 删掉 ports 段
 ```
 
-### 3. 反向代理（Caddy 示例）
+### 3. 反向代理
+
+#### Caddy（推荐，自动 HTTPS）
 
 `/etc/caddy/Caddyfile`：
 
@@ -123,16 +125,34 @@ api.tools.example.com {
     encode zstd gzip
     reverse_proxy localhost:8000
 
-    # 文件上传需要适当放宽 body 大小
+    # 文件上传体积上限（与 TOOLBOX_MAX_UPLOAD_MB 对齐）
     request_body {
         max_size 100MB
     }
+
+    # Caddy 自带 rate limit 模块（需要 build 时 enable），或用本项目的
+    # slowapi（已内置，TOOLBOX_RATE_LIMIT 控制）
 }
 ```
 
 Caddy 会自动从 Let's Encrypt 申请证书。
 
-> 用 Nginx 也是同样思路，加 `client_max_body_size 100m;` 与 `proxy_pass`。
+#### Nginx（含限流 + 上传上限 + 安全头模板）
+
+完整模板见 [`scripts/nginx.toolbox.conf.example`](../scripts/nginx.toolbox.conf.example)：
+
+```bash
+sudo cp scripts/nginx.toolbox.conf.example /etc/nginx/conf.d/toolbox.conf
+sudo certbot --nginx -d tools.example.com -d api.tools.example.com
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+模板包含：
+- 每 IP 每分钟 10 次 `/tools/file-convert/convert` 上传限流（与后端 slowapi 双层保护）
+- 每 IP 每分钟 120 次其他 API 调用限流
+- `client_max_body_size 110m` 与 `TOOLBOX_MAX_UPLOAD_MB=100` 对齐
+- `proxy_read_timeout 600s` 支持大 PDF 长跑
+- `X-Content-Type-Options` / `X-Frame-Options` / `Referrer-Policy` 安全头
 
 ### 4. 启动
 
@@ -152,6 +172,8 @@ sudo caddy reload --config /etc/caddy/Caddyfile
 | 变量                       | 默认                                         | 说明                                                       |
 | -------------------------- | -------------------------------------------- | ---------------------------------------------------------- |
 | `TOOLBOX_ALLOWED_ORIGINS`  | `http://localhost:3000,http://127.0.0.1:3000` | CORS 白名单，逗号分隔。商用部署改成自家域名                  |
+| `TOOLBOX_RATE_LIMIT`       | `20/minute`                                  | 文件转换接口每 IP 限流，slowapi 语法。空串关闭              |
+| `TOOLBOX_MAX_UPLOAD_MB`    | `100`                                        | 上传体积上限（MB），超出直接 413                            |
 | `HF_HOME`                  | `/data/huggingface`                          | Docling 用到的 HuggingFace 模型缓存目录                     |
 | `DOCLING_CACHE`            | `/data/docling`                              | Docling 模型 / 中间产物缓存                                |
 | `TOOLBOX_DATA_DIR`         | `/data`                                      | 数据根目录                                                  |

@@ -231,6 +231,8 @@ docker compose up -d --build
 | 变量                       | 默认                                          | 说明                                            |
 | -------------------------- | --------------------------------------------- | ----------------------------------------------- |
 | `TOOLBOX_ALLOWED_ORIGINS`  | `http://localhost:3000,http://127.0.0.1:3000`  | CORS 白名单，商用部署改成自家域名                |
+| `TOOLBOX_RATE_LIMIT`       | `20/minute`                                    | 文件转换接口每 IP 限流，slowapi 语法。空串关闭   |
+| `TOOLBOX_MAX_UPLOAD_MB`    | `100`                                          | 上传体积上限（MB），超出直接 413                 |
 | `NEXT_PUBLIC_API_BASE`     | `http://127.0.0.1:8000`                       | 前端调用的后端地址，**构建期**注入               |
 
 ---

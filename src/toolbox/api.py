@@ -2,7 +2,7 @@
 
 Each tool registers its own APIRouter under `tools/<slug>/router.py` and is
 mounted here under `/tools/<slug>`. Global concerns (CORS, health, model
-warmup, LLM settings) live in this file or `core/`.
+warmup, LLM settings, rate limits, upload size) live in this file or `core/`.
 """
 
 import logging
@@ -10,9 +10,14 @@ import os
 import threading
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi.errors import RateLimitExceeded
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.responses import Response
 
+from .core.limits import MAX_UPLOAD_BYTES, MAX_UPLOAD_MB, limiter
 from .core.settings_api import router as settings_router
 from .tools.file_convert import router as file_convert_router
 
@@ -50,6 +55,46 @@ async def lifespan(app: FastAPI):
 
 
 api = FastAPI(title="Toolbox", version="0.1.0", lifespan=lifespan)
+
+# ---- Rate limiting (slowapi) ----
+# Limits are decorated per-route in `tools/<slug>/router.py`. App-level wiring
+# below registers the limiter & its 429 handler. Empty TOOLBOX_RATE_LIMIT
+# disables enforcement on annotated routes.
+api.state.limiter = limiter
+
+
+@api.exception_handler(RateLimitExceeded)
+async def _rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        {"detail": f"rate limit exceeded: {exc.detail}"},
+        status_code=429,
+        headers={"Retry-After": "60"},
+    )
+
+
+# ---- Upload size cap (Content-Length precheck) ----
+class UploadSizeLimiter(BaseHTTPMiddleware):
+    """Reject POSTs hitting /tools/file-convert/convert whose Content-Length
+    exceeds MAX_UPLOAD_BYTES. Streams without Content-Length pass through;
+    the engine itself caps memory inside its temp file pipeline.
+    """
+
+    async def dispatch(self, request: Request, call_next):
+        path = request.url.path
+        if request.method == "POST" and path.endswith("/file-convert/convert"):
+            cl = request.headers.get("content-length")
+            if cl and cl.isdigit() and int(cl) > MAX_UPLOAD_BYTES:
+                return Response(
+                    content=(
+                        f'{{"detail":"file too large: max {MAX_UPLOAD_MB} MB"}}'
+                    ).encode(),
+                    status_code=413,
+                    media_type="application/json",
+                )
+        return await call_next(request)
+
+
+api.add_middleware(UploadSizeLimiter)
 
 api.add_middleware(
     CORSMiddleware,

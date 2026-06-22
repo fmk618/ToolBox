@@ -1,0 +1,89 @@
+# Nginx 反向代理示例 —— Toolbox 商用部署
+# ============================================================
+# 把这个文件复制到 /etc/nginx/conf.d/toolbox.conf 之后：
+#   sudo nginx -t && sudo systemctl reload nginx
+#
+# 假设：
+#   tools.example.com        ← Web 前端（Next.js standalone @ :3000）
+#   api.tools.example.com    ← Backend API（FastAPI @ :8000）
+#   两个服务都在同台机器，Toolbox 容器通过 docker-compose 起。
+#
+# HTTPS：建议同时跑 certbot --nginx 自动配 Let's Encrypt 证书。
+# Caddy 版本见 docs/DEPLOYMENT.md「路径三」。
+
+# ---------- 共享：rate-limit zone ----------
+# 给 file-convert 上传单独限流，避免单 IP 把后端打满。
+# Nginx 这层是粗粒度防御，后端 slowapi 是细粒度补充。
+limit_req_zone $binary_remote_addr zone=toolbox_upload:10m rate=10r/m;
+limit_req_zone $binary_remote_addr zone=toolbox_api:10m rate=120r/m;
+
+# ---------- Web 前端 ----------
+server {
+    listen 80;
+    server_name tools.example.com;
+    # 让 certbot 接管 SSL，下面这行通常会被 certbot 自动改写。
+    # return 301 https://$host$request_uri;
+
+    # gzip / brotli（建议装 nginx-mod-http-brotli 后启用）
+    gzip on;
+    gzip_types text/plain text/css application/javascript application/json image/svg+xml;
+    gzip_min_length 256;
+
+    location / {
+        proxy_pass         http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_read_timeout 300s;
+    }
+}
+
+# ---------- Backend API ----------
+server {
+    listen 80;
+    server_name api.tools.example.com;
+
+    # 全局：API 调用合理上限（每 IP 每分钟 120 次）
+    limit_req zone=toolbox_api burst=20 nodelay;
+    limit_req_status 429;
+
+    # 上传体积上限（与 TOOLBOX_MAX_UPLOAD_MB 保持一致；
+    # 这里设大一点防止偶发超量直接 400 而不到后端 413）
+    client_max_body_size 110m;
+    client_body_buffer_size 1m;
+
+    # 上传链路：缓冲设小，转发更直；连接保持长一些
+    proxy_request_buffering off;
+    proxy_buffering         off;
+
+    # 单独给 file-convert/convert 严格限流（每 IP 每分钟 10 次）
+    location /tools/file-convert/convert {
+        limit_req zone=toolbox_upload burst=5 nodelay;
+        limit_req_status 429;
+        proxy_pass         http://127.0.0.1:8000;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_read_timeout 600s;   # 单个大 PDF 可能跑数分钟
+        proxy_send_timeout 600s;
+    }
+
+    location / {
+        proxy_pass         http://127.0.0.1:8000;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_read_timeout 60s;
+    }
+
+    # 安全头（按需调整 CSP）
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header Referrer-Policy        "strict-origin-when-cross-origin" always;
+    add_header X-Frame-Options        "DENY" always;
+}
