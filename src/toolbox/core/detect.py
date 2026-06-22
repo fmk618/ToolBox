@@ -20,6 +20,17 @@ EXTENSION_MAP: dict[str, str] = {
     ".odt": "odt",
     ".csv": "csv",
     ".json": "json",
+    # raster image formats (handled by PillowEngine)
+    ".jpg":  "jpg",
+    ".jpeg": "jpg",
+    ".png": "png",
+    ".webp": "webp",
+    ".avif": "avif",
+    ".tiff": "tiff",
+    ".tif": "tiff",
+    ".bmp": "bmp",
+    ".gif": "gif",
+    ".ico": "ico",
 }
 
 

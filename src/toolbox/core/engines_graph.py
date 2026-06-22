@@ -7,6 +7,7 @@ from ..engines.libreoffice import LibreOfficeEngine
 from ..engines.markitdown import MarkItDownEngine
 from ..engines.opendataloader import OpenDataLoaderEngine
 from ..engines.pandoc import PandocEngine
+from ..engines.pillow import PillowEngine
 from ..engines.vision_llm import VisionLLMEngine
 
 # Order matters: earlier engines win when multiple engines claim the same edge.
@@ -24,6 +25,7 @@ ENGINES: list[Engine] = [
     MarkItDownEngine(),
     PandocEngine(),
     LibreOfficeEngine(),
+    PillowEngine(),
 ]
 
 
