@@ -10,11 +10,12 @@ import tempfile
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, File, HTTPException, Query, UploadFile
+from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse
 
 from ...core.engines_graph import ENGINES, build_graph
 from ...core.errors import ToolboxError
+from ...core.limits import RATE_LIMIT, limiter
 from ...core.pipeline import convert
 
 router = APIRouter(tags=["file-convert"])
@@ -47,8 +48,19 @@ def list_routes():
     }
 
 
+# Rate limit decorator is applied only when TOOLBOX_RATE_LIMIT is non-empty.
+# slowapi's `limiter.limit("")` raises at decorate-time, so guard with a
+# conditional no-op wrapper.
+def _maybe_limit(fn):
+    if not RATE_LIMIT:
+        return fn
+    return limiter.limit(RATE_LIMIT)(fn)
+
+
 @router.post("/convert")
+@_maybe_limit
 def convert_endpoint(
+    request: Request,
     file: UploadFile = File(...),
     to: str = Query(..., description="Target format, e.g. 'md', 'pdf', 'docx'"),
 ):
