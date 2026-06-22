@@ -43,7 +43,7 @@ def list_engines():
 def list_routes():
     graph = build_graph()
     return {
-        src: [{"to": dst, "engine": eng.name} for dst, eng in nbrs]
+        src: [{"to": dst, "engine": engines[0].name} for dst, engines in nbrs]
         for src, nbrs in graph.items()
     }
 
