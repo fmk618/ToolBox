@@ -1,17 +1,14 @@
-# Toolbox 一键自托管：前端 + 后端
+# Toolbox 生产部署
 #
-# 用途：
-#   - 本地或单机服务器一行命令拉起完整工具百宝箱
-#   - 商用部署时把 ports 改成内部网络，前面套 Nginx / Caddy 做 TLS 与域名
+# 首次启动前：
+#   1. 复制 .env.example → .env，填写 TOOLBOX_ADMIN_TOKEN 等变量
+#   2. 将 nginx.conf 中的 yourdomain.com 替换为你的真实域名
+#   3. 申请 Let's Encrypt 证书（仅首次）：
+#      docker compose run --rm certbot certonly --webroot \
+#        -w /var/www/certbot -d yourdomain.com --email your@email.com --agree-tos
+#   4. docker compose up -d --build
 #
-# 启动：
-#   docker compose up -d --build
-#
-# 默认监听：
-#   - http://localhost:3000  →  Web 前端
-#   - http://localhost:8000  →  Backend API
-#
-# 商用部署看 docs/DEPLOYMENT.md。
+# 证书续期：certbot 服务每 12 小时自动检查并续期
 
 services:
   api:
@@ -20,16 +17,18 @@ services:
       dockerfile: Dockerfile
     image: toolbox-api:latest
     restart: unless-stopped
+    expose:
+      - "8000"
     environment:
-      # 允许哪些 Origin 调用 API。商用部署改成你的域名，多个用逗号分隔
-      TOOLBOX_ALLOWED_ORIGINS: "http://localhost:3000,http://127.0.0.1:3000"
-      # 让 Docling / HF 模型缓存持久化到挂载卷
+      TOOLBOX_DATA_DIR: /data
+      TOOLBOX_ADMIN_TOKEN: ${TOOLBOX_ADMIN_TOKEN}
+      TOOLBOX_RATE_LIMIT: ${TOOLBOX_RATE_LIMIT:-20/minute}
+      TOOLBOX_MAX_UPLOAD_MB: ${TOOLBOX_MAX_UPLOAD_MB:-100}
       HF_HOME: /data/huggingface
       DOCLING_CACHE: /data/docling
     volumes:
       - toolbox_data:/data
-    ports:
-      - "8000:8000"
+    command: toolbox serve --host 0.0.0.0
     healthcheck:
       test:
         [
@@ -47,29 +46,36 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
-      args:
-        # NEXT_PUBLIC_API_BASE 是构建期注入，运行时改要重新 build。
-        # 商用部署改成你的 API 域名。
-        NEXT_PUBLIC_API_BASE: "http://localhost:8000"
     image: toolbox-web:latest
     restart: unless-stopped
+    expose:
+      - "3000"
     depends_on:
       api:
         condition: service_healthy
-    ports:
-      - "3000:3000"
 
-  # ---- 可选：opendataloader-pdf hybrid 模式 sidecar ----
-  # 取消注释后即可在前端「系统设置」配置 hybrid backend URL：
-  #   http://opendataloader:5002
-  # 启用后 PDF→Markdown 走 benchmark 第一档的混合管线
-  # opendataloader:
-  #   image: ghcr.io/opendataloader-project/opendataloader-pdf-hybrid:latest
-  #   restart: unless-stopped
-  #   environment:
-  #     OPENDATALOADER_PORT: "5002"
-  #   expose:
-  #     - "5002"
+  nginx:
+    image: nginx:alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - certbot_certs:/etc/letsencrypt:ro
+      - certbot_webroot:/var/www/certbot:ro
+    depends_on:
+      - api
+      - web
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot_certs:/etc/letsencrypt
+      - certbot_webroot:/var/www/certbot
+    entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew --quiet; sleep 12h & wait $${!}; done"
 
 volumes:
   toolbox_data:
+  certbot_certs:
+  certbot_webroot:

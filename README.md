@@ -21,7 +21,7 @@
 
 ---
 
-## 🛠️ 工具清单（33 个）
+## 🛠️ 工具清单（34 个）
 
 | 分类     | 工具                                                                                 | 依赖    |
 | -------- | ------------------------------------------------------------------------------------ | ------- |
@@ -60,58 +60,6 @@
 
 ---
 
-## 🚀 快速开始
-
-### 1. 克隆（含子模块）
-
-```bash
-git clone --recurse-submodules https://github.com/fmk618/ToolBox.git
-cd ToolBox
-```
-
-如果已经 clone 没拿子模块：`git submodule update --init`。
-
-### 2. 安装 Python 后端
-
-需要 Python ≥ 3.11，推荐 [uv](https://github.com/astral-sh/uv)：
-
-```bash
-uv sync
-```
-
-此步即可解锁**任意格式 → Markdown**（由 MarkItDown 提供）。
-
-### 3. 安装可选系统工具（按需）
-
-| 工具                          | 解锁能力                                                   | 安装命令（macOS）                                    |
-| ----------------------------- | ---------------------------------------------------------- | ---------------------------------------------------- |
-| `pandoc`                      | Markdown ↔ Word / HTML / EPUB / RTF                        | `brew install pandoc`                                |
-| `xelatex`                     | Markdown → PDF 直转                                        | `brew install --cask basictex`                       |
-| `libreoffice`                 | Word / PPT / Excel → PDF                                   | `brew install --cask libreoffice`                    |
-| `openjdk` + `pdf-pro` extra   | opendataloader-pdf 引擎（PDF→MD benchmark #1，0.907）       | `brew install openjdk@17 && uv sync --extra pdf-pro` |
-
-Linux：`apt install pandoc texlive-xetex libreoffice default-jre`。
-
-Vision-LLM 引擎（PDF → Markdown 质量最高）在前端「系统设置」里配置 OpenAI / DeepSeek / 智谱等 API Key 即可启用。
-
-> Docker 镜像默认就装好了 OpenJDK 与 `pdf-pro` extra，不需要再操心。
-
-### 4. 启动前后端
-
-```bash
-# 终端 1 — 后端
-uv run toolbox serve            # → http://127.0.0.1:8000
-
-# 终端 2 — Web 前端
-cd web
-npm install
-npm run dev                     # → http://localhost:3000
-```
-
-浏览器打开 <http://localhost:3000> 即可看到工具百宝箱。
-
----
-
 ## 📖 使用方法
 
 ### CLI
@@ -145,7 +93,6 @@ curl -F "file=@input.pdf" "http://127.0.0.1:8000/tools/file-convert/convert?to=m
 curl http://127.0.0.1:8000/tools/file-convert/engines | jq
 ```
 
-Swagger 文档：<http://127.0.0.1:8000/docs>。
 
 ---
 
@@ -221,21 +168,22 @@ toolbox/
 ```bash
 git clone --recurse-submodules https://github.com/fmk618/ToolBox.git
 cd ToolBox
+cp .env.example .env          # 填写 TOOLBOX_ADMIN_TOKEN
+# 替换 nginx.conf 中的 yourdomain.com
+# 首次申请 TLS 证书（见 nginx.conf 注释）
 docker compose up -d --build
 ```
 
-`http://<server>:3000` 是 Web 前端，`http://<server>:8000` 是 Backend API。
-
-**商用域名 / HTTPS / Vercel 混合架构** 等详细方案见 [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md)。
+nginx 统一入口：`https://yourdomain.com`，前端和 `/api/` 均经由 443 代理。
 
 ### 关键环境变量
 
-| 变量                       | 默认                                          | 说明                                            |
-| -------------------------- | --------------------------------------------- | ----------------------------------------------- |
-| `TOOLBOX_ALLOWED_ORIGINS`  | `http://localhost:3000,http://127.0.0.1:3000`  | CORS 白名单，商用部署改成自家域名                |
-| `TOOLBOX_RATE_LIMIT`       | `20/minute`                                    | 文件转换接口每 IP 限流，slowapi 语法。空串关闭   |
-| `TOOLBOX_MAX_UPLOAD_MB`    | `100`                                          | 上传体积上限（MB），超出直接 413                 |
-| `NEXT_PUBLIC_API_BASE`     | `http://127.0.0.1:8000`                       | 前端调用的后端地址，**构建期**注入               |
+| 变量                       | 默认           | 说明                                                    |
+| -------------------------- | -------------- | ------------------------------------------------------- |
+| `TOOLBOX_ADMIN_TOKEN`      | 无（必填）     | 保护 LLM 配置写操作，生产必须设置                        |
+| `TOOLBOX_RATE_LIMIT`       | `20/minute`    | 文件转换接口每 IP 限流，slowapi 语法。空串关闭           |
+| `TOOLBOX_MAX_UPLOAD_MB`    | `100`          | 上传体积上限（MB），超出直接 413                         |
+| `TOOLBOX_DEBUG`            | `0`            | `1` 时开启 Swagger UI（`/docs`），生产保持 `0`           |
 
 ---
 

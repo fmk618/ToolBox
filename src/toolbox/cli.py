@@ -78,11 +78,16 @@ def routes_cmd():
 def serve_cmd(
     host: str = typer.Option("127.0.0.1", "--host"),
     port: int = typer.Option(8000, "--port"),
+    workers: int = typer.Option(
+        1,
+        "--workers",
+        help="Number of uvicorn worker processes. Note: >1 breaks in-memory job store.",
+    ),
 ):
     """Run the HTTP API server."""
     import uvicorn
 
-    uvicorn.run("toolbox.api:api", host=host, port=port, reload=False)
+    uvicorn.run("toolbox.api:api", host=host, port=port, reload=False, workers=workers)
 
 
 if __name__ == "__main__":

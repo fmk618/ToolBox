@@ -48,13 +48,23 @@ def _warmup_docling():
         log.warning(f"Docling pre-warm skipped: {e}")
 
 
+_debug = os.getenv("TOOLBOX_DEBUG", "").strip() == "1"
+
+
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     threading.Thread(target=_warmup_docling, daemon=True).start()
     yield
 
 
-api = FastAPI(title="Toolbox", version="0.1.0", lifespan=lifespan)
+api = FastAPI(
+    title="Toolbox",
+    version="0.1.0",
+    lifespan=lifespan,
+    docs_url="/docs" if _debug else None,
+    redoc_url="/redoc" if _debug else None,
+    openapi_url="/openapi.json" if _debug else None,
+)
 
 # ---- Rate limiting (slowapi) ----
 # Limits are decorated per-route in `tools/<slug>/router.py`. App-level wiring

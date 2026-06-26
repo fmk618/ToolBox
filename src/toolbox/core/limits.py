@@ -21,7 +21,7 @@ from __future__ import annotations
 import os
 
 from slowapi import Limiter
-from slowapi.util import get_remote_address
+from slowapi.util import get_ipaddr
 
 _DEFAULT_RATE = "20/minute"
 _DEFAULT_MAX_MB = 100
@@ -33,4 +33,5 @@ MAX_UPLOAD_BYTES = MAX_UPLOAD_MB * 1024 * 1024
 # Limiter is enabled either way; routes without `@limiter.limit(...)` are
 # unaffected. Setting TOOLBOX_RATE_LIMIT="" disables limits on annotated routes
 # because slowapi treats an empty string as "no limit".
-limiter = Limiter(key_func=get_remote_address)
+# get_ipaddr reads X-Forwarded-For so per-user limiting works behind nginx proxy.
+limiter = Limiter(key_func=get_ipaddr, headers_enabled=True)

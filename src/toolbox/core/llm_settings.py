@@ -11,7 +11,8 @@ import stat
 from pathlib import Path
 from typing import TypedDict
 
-CONFIG_DIR = Path.home() / ".toolbox"
+_data_dir = os.getenv("TOOLBOX_DATA_DIR", "")
+CONFIG_DIR = (Path(_data_dir) if _data_dir else Path.home()) / ".toolbox"
 CONFIG_PATH = CONFIG_DIR / "llm.json"
 
 
