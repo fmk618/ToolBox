@@ -1,5 +1,6 @@
 import logging
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 
 from .detect import detect_format
@@ -9,7 +10,12 @@ from .errors import ConversionFailedError
 log = logging.getLogger("toolbox.pipeline")
 
 
-def convert(src: Path, dst: Path, dst_fmt: str | None = None) -> list[str]:
+def convert(
+    src: Path,
+    dst: Path,
+    dst_fmt: str | None = None,
+    on_progress: Callable[[int, int], None] | None = None,
+) -> list[str]:
     """Convert src → dst, returning the list of engine names that ran.
 
     Format is inferred from extensions unless dst_fmt is given explicitly.
@@ -27,6 +33,8 @@ def convert(src: Path, dst: Path, dst_fmt: str | None = None) -> list[str]:
     steps = find_path(src_fmt, dst_fmt)
     if not steps:
         dst.write_bytes(src.read_bytes())
+        if on_progress:
+            on_progress(1, 1)
         return []
 
     used: list[str] = []
@@ -54,6 +62,9 @@ def convert(src: Path, dst: Path, dst_fmt: str | None = None) -> list[str]:
                         )
             if last_err is not None:
                 raise last_err
+
+            if on_progress:
+                on_progress(i + 1, len(steps))
 
             current = step_out
     return used
