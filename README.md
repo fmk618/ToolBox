@@ -1,7 +1,7 @@
 # Toolbox · 工具百宝箱
 
 > 一个本地优先的常用小工具集合 ——「工具百宝箱」，面向所有人。
-> 33 个日常会用到的小工具开箱即用，仅文件格式转换工具走 Python 后端。
+> 34 个日常会用到的小工具开箱即用，仅文件格式转换工具走 Python 后端。
 
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-green.svg)](LICENSE)
@@ -15,7 +15,7 @@
 | 部分                  | 路径                                                           | 角色                                                                                     |
 | --------------------- | -------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
 | **Python 后端**       | `src/toolbox/`                                                 | 文件格式转换工具的运行时（CLI + HTTP API + 6 个转换引擎）                                  |
-| **Next.js Web 前端**  | [`web/`](https://github.com/fmk618/ToolBox-web)（子模块）       | 浏览器端「工具百宝箱」UI，shadcn/ui 视觉、⌘K 命令面板、本地运行 29 个纯前端工具 + 调用后端转换 1 个 |
+| **Next.js Web 前端**  | [`web/`](https://github.com/fmk618/ToolBox-web)（子模块）       | 浏览器端「工具百宝箱」UI，shadcn/ui 视觉、⌘K 命令面板、本地运行 30 个纯前端工具 + 调用后端转换 1 个 |
 
 后端架构上**不重复造轮子**：把社区里最好用的几个引擎（Vision-LLM、opendataloader-pdf、Docling、MarkItDown、Pandoc、LibreOffice）封装在统一接口下，用**路由图 BFS**自动选择最优转换路径。
 
@@ -33,6 +33,7 @@
 | 时间日期 | 时间戳 · 时区换算 · 番茄钟 · Cron 表达式 · 日期计算器                                 | 纯前端  |
 | 颜色数据 | Hex⇄RGB⇄HSL · WCAG 颜色对比度                                                        | 纯前端  |
 | 图片处理 | 图片压缩 · 图片格式转换（JPG/PNG/WebP/AVIF/GIF 等）· SVG 优化                         | 纯前端  |
+| 开发工具 | 代码截图（highlight.js 语法高亮 + 2× PNG 导出）                                        | 纯前端  |
 | 系统设置 | 系统设置（后端地址 / Vision-LLM 配置 / 本地数据）                                      | 纯前端  |
 
 ---
@@ -260,9 +261,9 @@ bash scripts/install-hooks.sh
 | ---- | -------- | ----------------------------------------------------------------------------------- |
 | M1   | ✅       | Python 后端 — CLI + HTTP API，5 引擎，BFS 路由                                       |
 | M2   | ✅       | Next.js 工具百宝箱前端，shadcn 视觉，⌘K 命令面板，26 个工具                          |
-| M3   | 🔄       | 进制转换 / 文字统计 / Mock 数据 / SVG 优化 / 贷款计算器 / 日期计算器 / PDF 拆分（已上线，共 33 个工具）；Carbon 代码截图（计划中）|
-| M4   | 💭       | 工具收藏 / 最近使用、跨设备配置同步、PWA 离线模式                                     |
-| M5   | 💭       | Tauri 桌面壳，文件夹自动监听、批量转换                                                |
+| M3   | ✅       | 进制转换 / 文字统计 / Mock 数据 / SVG 优化 / 贷款计算器 / 日期计算器 / PDF 拆分 / 代码截图，共 34 个工具 |
+| M4   | ✅       | 工具收藏 / 最近使用（localStorage 持久化）、PWA 离线模式（Service Worker + 安装横幅）  |
+| M5   | ✅       | Tauri v2 桌面壳骨架（`src-tauri/`），`TAURI=1 next build` 静态导出，文档见 `docs/TAURI.md` |
 
 ---
 
