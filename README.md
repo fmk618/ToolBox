@@ -267,18 +267,6 @@ bash scripts/install-hooks.sh
 
 ---
 
-## 🤝 贡献
-
-欢迎 Issue / PR。提交前：
-
-```bash
-uv run pytest                                          # 测试通过
-uv run toolbox engines                                 # 至少 markitdown 可用
-uv run toolbox convert tests/sample.md -o /tmp/t.pdf   # 烟测通过
-```
-
----
-
 ## 📄 License
 
 本项目采用 **Apache License 2.0**。完整许可证见 [LICENSE](LICENSE)。
