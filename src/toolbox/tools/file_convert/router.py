@@ -12,13 +12,14 @@ import uuid
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
-from fastapi import APIRouter, File, HTTPException, Query, Request, UploadFile
+from fastapi import APIRouter, File, Form, HTTPException, Query, Request, UploadFile
 from fastapi.responses import FileResponse
 from starlette.background import BackgroundTask
 
 from ...core.engines_graph import ENGINES, build_graph
 from ...core.errors import ToolboxError
 from ...core.limits import RATE_LIMIT, limiter
+from ...core import llm_settings
 from ...core.pipeline import convert
 
 router = APIRouter(tags=["file-convert"])
@@ -72,8 +73,16 @@ async def submit_job(
     request: Request,
     file: UploadFile = File(...),
     to: str = Query(..., description="Target format, e.g. 'md', 'pdf', 'docx'"),
+    llm_provider: str = Form(""),
+    llm_model: str = Form(""),
+    llm_api_key: str = Form(""),
 ):
-    """Submit a conversion job. Returns job_id immediately; use GET /jobs/{id} to poll."""
+    """Submit a conversion job. Returns job_id immediately; use GET /jobs/{id} to poll.
+
+    Optional form fields llm_provider / llm_model / llm_api_key activate the
+    Vision-LLM engine for this job only. Credentials are used in-process and
+    never persisted.
+    """
     if not file.filename:
         raise HTTPException(400, "filename required")
 
@@ -94,8 +103,15 @@ async def submit_job(
 
     dst_fmt = to
     src_path_str = str(src_path)
+    user_llm = (
+        {"provider": llm_provider, "model": llm_model, "api_key": llm_api_key}
+        if llm_provider and llm_model and llm_api_key
+        else None
+    )
 
     def run() -> None:
+        if user_llm:
+            llm_settings.set_request_config(user_llm)
         src = Path(src_path_str)
         dst_name = f"{src.stem}.{dst_fmt}"
         dst = work_dir / dst_name
@@ -126,6 +142,9 @@ async def submit_job(
             with _jobs_lock:
                 if job_id in _jobs:
                     _jobs[job_id].update({"status": "failed", "error": str(e)})
+        finally:
+            if user_llm:
+                llm_settings.set_request_config(None)
 
     _exec.submit(run)
     return {"job_id": job_id}

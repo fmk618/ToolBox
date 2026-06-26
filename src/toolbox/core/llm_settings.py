@@ -8,12 +8,22 @@ conversion request so settings can be changed without restarting the backend.
 import json
 import os
 import stat
+import threading
 from pathlib import Path
 from typing import TypedDict
 
 _data_dir = os.getenv("TOOLBOX_DATA_DIR", "")
 CONFIG_DIR = (Path(_data_dir) if _data_dir else Path.home()) / ".toolbox"
 CONFIG_PATH = CONFIG_DIR / "llm.json"
+
+# Per-request override — set by the file-convert router when the user
+# supplies their own LLM credentials in the job submission form.
+_thread_local = threading.local()
+
+
+def set_request_config(config: "LLMSettings | None") -> None:
+    """Set (or clear) a per-thread LLM config that overrides the on-disk file."""
+    _thread_local.config = config
 
 
 class LLMSettings(TypedDict, total=False):
@@ -23,7 +33,13 @@ class LLMSettings(TypedDict, total=False):
 
 
 def load() -> LLMSettings:
-    """Read settings from disk; return {} if not configured yet."""
+    """Return current LLM settings.
+
+    Priority: per-request thread-local (user-supplied) > on-disk file.
+    """
+    override = getattr(_thread_local, "config", None)
+    if override:
+        return override
     if not CONFIG_PATH.exists():
         return {}
     try:
