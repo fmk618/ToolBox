@@ -168,7 +168,7 @@ toolbox/
 ```bash
 git clone --recurse-submodules https://github.com/fmk618/ToolBox.git
 cd ToolBox
-cp .env.example .env          # 填写 TOOLBOX_ADMIN_TOKEN
+cp .env.product .env          # 填写 TOOLBOX_ADMIN_TOKEN
 # 替换 nginx.conf 中的 yourdomain.com
 # 首次申请 TLS 证书（见 nginx.conf 注释）
 docker compose up -d --build
