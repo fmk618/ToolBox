@@ -14,10 +14,15 @@ class PandocEngine(Engine):
         return shutil.which("pandoc") is not None
 
     def edges(self) -> list[tuple[str, str]]:
+        # NOTE: no direct ("md", "pdf") edge on purpose. Pandoc's only PDF path
+        # is via a LaTeX engine (xelatex), which silently drops every CJK glyph
+        # unless a CJK font is wired up and a full TeX install is present —
+        # neither holds in the slim Docker image. All →pdf conversions in this
+        # project go through LibreOffice instead (md→docx here, docx→pdf there),
+        # which renders CJK / symbols / task-list checkboxes correctly.
         return [
             ("md", "docx"),
             ("md", "html"),
-            ("md", "pdf"),
             ("md", "epub"),
             ("md", "rtf"),
             ("md", "odt"),
@@ -32,8 +37,6 @@ class PandocEngine(Engine):
 
     def convert(self, src: Path, dst: Path, src_fmt: str, dst_fmt: str) -> None:
         cmd = ["pandoc", str(src), "-o", str(dst)]
-        if dst_fmt == "pdf":
-            cmd += ["--pdf-engine=xelatex"]
         proc = subprocess.run(cmd, capture_output=True, text=True, timeout=300)
         if proc.returncode != 0:
             raise ConversionFailedError(
