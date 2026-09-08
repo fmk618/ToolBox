@@ -1,7 +1,7 @@
 # Toolbox 生产部署
 #
 # 首次启动前：
-#   1. 复制 .env.example → .env，填写 TOOLBOX_ADMIN_TOKEN 等变量
+#   1. 复制 .env.product → .env，按需修改变量
 #   2. 将 nginx.conf 中的 yourdomain.com 替换为你的真实域名
 #   3. 申请 Let's Encrypt 证书（仅首次）：
 #      docker compose run --rm certbot certonly --webroot \
@@ -21,9 +21,11 @@ services:
       - "8000"
     environment:
       TOOLBOX_DATA_DIR: /data
-      TOOLBOX_ADMIN_TOKEN: ${TOOLBOX_ADMIN_TOKEN}
       TOOLBOX_RATE_LIMIT: ${TOOLBOX_RATE_LIMIT:-20/minute}
       TOOLBOX_MAX_UPLOAD_MB: ${TOOLBOX_MAX_UPLOAD_MB:-100}
+      # 信任 compose 网络内反代（nginx 容器）传来的 X-Forwarded-For，
+      # 否则限流会把所有用户算成同一个 IP（见 core/limits.py）
+      FORWARDED_ALLOW_IPS: 172.16.0.0/12
       HF_HOME: /data/huggingface
       DOCLING_CACHE: /data/docling
     volumes:

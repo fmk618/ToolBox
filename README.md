@@ -1,7 +1,7 @@
 # Toolbox · 工具百宝箱
 
 > 一个本地优先的常用小工具集合 ——「工具百宝箱」，面向所有人。
-> 40 个日常会用到的小工具开箱即用，仅文件转换 / 图片去水印等少数工具走 Python 后端。
+> 52 个日常会用到的小工具开箱即用，仅文件转换 / 图片去水印等少数工具走 Python 后端。
 
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-green.svg)](LICENSE)
@@ -21,20 +21,20 @@
 
 ---
 
-## 🛠️ 工具清单（40 个）
+## 🛠️ 工具清单（52 个）
 
 | 分类     | 工具                                                                                 | 依赖    |
 | -------- | ------------------------------------------------------------------------------------ | ------- |
 | 文件转换 | 文件格式转换 · PDF 合并 · PDF 拆分                                                    | 后端/纯前端 |
 | 编解码   | Base64 · URL · HTML 实体                                                             | 纯前端  |
 | 加密哈希 | Hash（SHA-1/256/384/512）· MD5（加密/反查）· 密码生成 · JWT 解码                       | 纯前端  |
-| 文本工具 | JSON 格式化 · YAML⇄JSON · Diff 对比 · 正则表达式（可视化）· 文字统计                  | 纯前端  |
-| 实用工具 | 计算器 · 单位换算 · 进制转换 · Mock 数据 · UUID · 二维码生成 · 贷款计算器 · 养老计算器（中国）· 地址生成器 · 流程图（draw.io） | 纯前端  |
+| 文本工具 | JSON 格式化 · YAML⇄JSON · JSON⇄CSV/XML · JSON→TypeScript 类型 · SQL 格式化 · Diff 对比 · 正则表达式（可视化）· 文字统计 · 文本批量处理 | 纯前端  |
+| 实用工具 | 计算器 · 单位换算 · 进制转换 · Mock 数据 · UUID · 二维码生成/解析 · 贷款计算器 · 养老计算器（中国）· 地址生成器 · 流程图（draw.io）· 电子签名板 · 随机抽奖 · 健康计算器 · 汇率换算 | 纯前端/联网 |
 | 时间日期 | 时间戳 · 时区换算 · 番茄钟 · Cron 表达式 · 日期计算器                                 | 纯前端  |
 | 颜色数据 | Hex⇄RGB⇄HSL · WCAG 颜色对比度                                                        | 纯前端  |
-| 图片处理 | 图片压缩 · 图片格式转换（JPG/PNG/WebP/AVIF/GIF 等）· 图片转 ICO · 去除水印·文字 · SVG 优化 | 纯前端/后端 |
+| 图片处理 | 图片压缩 · 图片格式转换（JPG/PNG/WebP/AVIF/GIF 等）· 图片转 ICO · 去除水印·文字 · SVG 优化 · 图片取色板 · EXIF 查看/清除 | 纯前端/后端 |
 | 开发工具 | 代码截图（highlight.js 语法高亮 + 2× PNG 导出）                                        | 纯前端  |
-| 网络工具 | IP 查询 / 域名解析（DoH + IP 归属地）                                                 | 联网    |
+| 网络工具 | IP 查询 / 域名解析（DoH + IP 归属地）· HTTP 状态码 / 常用端口速查 | 联网/纯前端 |
 | 系统设置 | 系统设置（后端地址 / Vision-LLM 配置 / 本地数据）                                      | 纯前端  |
 
 ---
@@ -78,19 +78,22 @@ uv run toolbox serve --host 0.0.0.0 --port 8000  # 启动 HTTP API
 
 URL 命名空间按工具 slug 隔离：
 
-| 方法     | 路径                                  | 用途                                          |
-| -------- | ------------------------------------- | --------------------------------------------- |
-| `GET`    | `/health`                             | 健康检查                                       |
-| `GET`    | `/tools/file-convert/engines`         | 列出引擎与可用性（JSON）                       |
-| `GET`    | `/tools/file-convert/routes`          | 列出当前可用的全部转换边（JSON）                |
-| `POST`   | `/tools/file-convert/convert?to=<fmt>` | 上传文件并转换，返回转换后文件                  |
-| `GET`    | `/providers`                          | 列出支持的 Vision-LLM Provider                  |
-| `GET/POST/DELETE` | `/settings/llm`              | Vision-LLM Provider / Model / API Key 配置      |
-| `POST`   | `/settings/llm/test`                  | 测试当前 LLM 凭据是否能跑通                     |
+| 方法     | 路径                                    | 用途                                            |
+| -------- | --------------------------------------- | ----------------------------------------------- |
+| `GET`    | `/health`                               | 健康检查                                         |
+| `GET`    | `/tools/file-convert/engines`           | 列出引擎与可用性（JSON）                         |
+| `GET`    | `/tools/file-convert/routes`            | 列出当前可用的全部转换边（JSON）                  |
+| `POST`   | `/tools/file-convert/jobs?to=<fmt>`     | 提交异步转换任务，立即返回 `job_id`               |
+| `GET`    | `/tools/file-convert/jobs/{id}`         | 轮询任务进度（status / progress / error）         |
+| `GET`    | `/tools/file-convert/jobs/{id}/result`  | 下载转换结果（下载后自动清理任务文件）             |
+| `POST`   | `/tools/file-convert/convert?to=<fmt>`  | （遗留）同步转换，返回转换后文件                   |
+| `GET`    | `/providers`                            | 列出支持的 Vision-LLM Provider                    |
+| `POST`   | `/settings/llm/test`                    | 测试 LLM 凭据是否能跑通（密钥随请求传递，不存储）   |
 
 ```bash
-# 命令行调用示例
-curl -F "file=@input.pdf" "http://127.0.0.1:8000/tools/file-convert/convert?to=md" -o output.md
+# 命令行调用示例：异步转换 = 提交 → 轮询 → 下载
+JOB=$(curl -sF "file=@input.pdf" "http://127.0.0.1:8000/tools/file-convert/jobs?to=md" | jq -r .job_id)
+curl "http://127.0.0.1:8000/tools/file-convert/jobs/$JOB/result" -o output.md
 curl http://127.0.0.1:8000/tools/file-convert/engines | jq
 ```
 
@@ -114,7 +117,7 @@ toolbox/
     │   ├── pipeline.py                # 多步转换串联
     │   ├── detect.py                  # 扩展名 → 格式类型
     │   ├── errors.py                  # 业务异常
-    │   ├── llm_settings.py            # LLM 配置持久化
+    │   ├── llm_settings.py            # LLM 凭据解析（随请求传递，不落盘）
     │   ├── providers.py               # LLM Provider 目录
     │   └── settings_api.py            # /settings/llm + /providers Router
     ├── tools/
@@ -169,7 +172,7 @@ toolbox/
 ```bash
 git clone --recurse-submodules https://github.com/fmk618/ToolBox.git
 cd ToolBox
-cp .env.product .env          # 填写 TOOLBOX_ADMIN_TOKEN
+cp .env.product .env          # 按需修改变量
 # 替换 nginx.conf 中的 yourdomain.com
 # 首次申请 TLS 证书（见 nginx.conf 注释）
 docker compose up -d --build
@@ -181,9 +184,9 @@ nginx 统一入口：`https://yourdomain.com`，前端和 `/api/` 均经由 443 
 
 | 变量                       | 默认           | 说明                                                    |
 | -------------------------- | -------------- | ------------------------------------------------------- |
-| `TOOLBOX_ADMIN_TOKEN`      | 无（必填）     | 保护 LLM 配置写操作，生产必须设置                        |
 | `TOOLBOX_RATE_LIMIT`       | `20/minute`    | 文件转换接口每 IP 限流，slowapi 语法。空串关闭           |
-| `TOOLBOX_MAX_UPLOAD_MB`    | `100`          | 上传体积上限（MB），超出直接 413                         |
+| `TOOLBOX_MAX_UPLOAD_MB`    | `100`          | 上传体积上限（MB），`/tools/` 下所有 POST 统一生效        |
+| `FORWARDED_ALLOW_IPS`      | `127.0.0.1`    | 反代部署需设为代理网段（如 `172.16.0.0/12`），否则限流按代理 IP 计 |
 | `TOOLBOX_DEBUG`            | `0`            | `1` 时开启 Swagger UI（`/docs`），生产保持 `0`           |
 
 ---

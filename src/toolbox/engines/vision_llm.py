@@ -22,6 +22,7 @@ from .base import Engine
 log = logging.getLogger("toolbox.vision_llm")
 
 MAX_PARALLEL_PAGES = 4
+MAX_PAGES = 100  # hard cap: pages render to PNG in RAM and each costs an LLM call
 PAGE_DPI_SCALE = 2.0  # ≈144 DPI, balance of quality vs upload size
 
 PAGE_SEPARATORS = {
@@ -137,6 +138,12 @@ class VisionLLMEngine(Engine):
 
         pdf = pdfium.PdfDocument(str(src))
         page_count = len(pdf)
+        if page_count > MAX_PAGES:
+            pdf.close()
+            raise ConversionFailedError(
+                f"PDF has {page_count} pages; Vision-LLM supports at most {MAX_PAGES}. "
+                "Split the PDF or use a local engine (Docling / opendataloader)."
+            )
         log.info(
             f"Vision-LLM: {page_count} pages → {dst_fmt}, "
             f"provider={provider_id}, model={model}"
@@ -195,20 +202,29 @@ class VisionLLMEngine(Engine):
             try:
                 content = data["choices"][0]["message"]["content"]
             except (KeyError, IndexError) as e:
+                # Truncate — the raw provider body may be large and is not
+                # meant to reach the client verbatim.
                 raise ConversionFailedError(
-                    f"unexpected response from {label} on page {idx + 1}: {data!r}"
+                    f"unexpected response from {label} on page {idx + 1}: "
+                    f"{str(data)[:200]}"
                 ) from e
             return idx, _strip_markdown_fence(content)
 
         results: dict[int, str] = {}
-        with ThreadPoolExecutor(
-            max_workers=min(MAX_PARALLEL_PAGES, page_count)
-        ) as pool:
-            futures = [pool.submit(call_one, i) for i in range(page_count)]
+        pool = ThreadPoolExecutor(max_workers=min(MAX_PARALLEL_PAGES, page_count))
+        futures = [pool.submit(call_one, i) for i in range(page_count)]
+        try:
             for fut in as_completed(futures):
                 idx, content = fut.result()
                 results[idx] = content
                 log.info(f"Vision-LLM: page {idx + 1}/{page_count} done")
+        except BaseException:
+            # One page failed: stop paying for the remaining LLM calls instead
+            # of letting the context manager drain every in-flight request.
+            pool.shutdown(wait=False, cancel_futures=True)
+            raise
+        else:
+            pool.shutdown(wait=True)
 
         # 3) Concatenate in original page order.
         ordered = [results[i] for i in range(page_count)]

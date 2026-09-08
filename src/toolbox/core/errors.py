@@ -1,18 +1,24 @@
 class ToolboxError(Exception):
-    pass
+    """Base class for business errors.
+
+    `status_code` maps each subclass to the HTTP status returned by the
+    global exception handler in `toolbox.api`.
+    """
+
+    status_code = 400
 
 
 class UnknownFormatError(ToolboxError):
-    pass
+    status_code = 415
 
 
 class NoConversionPathError(ToolboxError):
-    pass
+    status_code = 422
 
 
 class EngineNotAvailableError(ToolboxError):
-    pass
+    status_code = 503
 
 
 class ConversionFailedError(ToolboxError):
-    pass
+    status_code = 400
