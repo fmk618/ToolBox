@@ -1,7 +1,7 @@
 [package]
 name = "toolbox"
 version = "0.1.0"
-description = "工具百宝箱"
+description = "FMKTools — 工具百宝箱"
 authors = []
 edition = "2021"
 

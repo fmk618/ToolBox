@@ -1,7 +1,7 @@
 [project]
 name = "toolbox"
 version = "0.1.0"
-description = "Toolbox — 工具百宝箱：开发者常用小工具集合 + 文件格式转换"
+description = "FMKTools — 工具百宝箱：开发者常用小工具集合与文件格式转换服务"
 license = "Apache-2.0"
 license-files = ["LICENSE"]
 requires-python = ">=3.11"

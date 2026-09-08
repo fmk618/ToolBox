@@ -2,7 +2,7 @@
 
 ## 概述
 
-M5 里程碑为 Toolbox 提供 Tauri v2 桌面壳，通过 Webview 将 Next.js 前端打包为原生桌面应用（macOS / Windows / Linux）。
+M5 里程碑为 FMKTools 工具百宝箱提供 Tauri v2 桌面壳，通过 Webview 将 Next.js 前端打包为原生桌面应用（macOS / Windows / Linux）。
 
 ## 前置依赖
 

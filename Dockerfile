@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.6
 #
-# Toolbox 后端镜像（FastAPI + Typer + 转换引擎）
+# FMKTools 工具百宝箱后端镜像（FastAPI + Typer + 转换引擎）
 #
 # 默认包含的引擎：MarkItDown、Docling、Pandoc、Vision-LLM
 # 不包含：LibreOffice（镜像太大，按需在派生镜像里加：

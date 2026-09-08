@@ -1,6 +1,6 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "Toolbox",
+  "productName": "FMKTools",
   "version": "0.1.0",
   "identifier": "com.toolbox.app",
   "build": {
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "Toolbox — 工具百宝箱",
+        "title": "FMKTools — 工具百宝箱",
         "width": 1280,
         "height": 800,
         "minWidth": 900,

@@ -1,4 +1,4 @@
-# Nginx 反向代理示例 —— Toolbox 商用部署
+# Nginx 反向代理示例 —— FMKTools 工具百宝箱商用部署
 # ============================================================
 # 把这个文件复制到 /etc/nginx/conf.d/toolbox.conf 之后：
 #   sudo nginx -t && sudo systemctl reload nginx
@@ -6,7 +6,7 @@
 # 假设：
 #   tools.example.com        ← Web 前端（Next.js standalone @ :3000）
 #   api.tools.example.com    ← Backend API（FastAPI @ :8000）
-#   两个服务都在同台机器，Toolbox 容器通过 docker-compose 起。
+#   两个服务都在同台机器，FMKTools 容器通过 docker-compose 起。
 #
 # HTTPS：建议同时跑 certbot --nginx 自动配 Let's Encrypt 证书。
 # Caddy 版本见 docs/DEPLOYMENT.md「路径三」。

@@ -1,4 +1,4 @@
-"""Toolbox HTTP API — thin app shell.
+"""FMKTools HTTP API — thin app shell.
 
 Each tool registers its own APIRouter under `tools/<slug>/router.py` and is
 mounted here under `/tools/<slug>`. Global concerns (CORS, health, model
@@ -64,7 +64,7 @@ async def lifespan(app: FastAPI):
 
 
 api = FastAPI(
-    title="Toolbox",
+    title="FMKTools",
     version="0.1.0",
     lifespan=lifespan,
     docs_url="/docs" if _debug else None,

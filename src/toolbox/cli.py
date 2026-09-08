@@ -9,7 +9,7 @@ from .core.pipeline import convert
 from .core.engines_graph import ENGINES, build_graph
 
 app = typer.Typer(
-    help="Toolbox — universal file format converter (PDF / Word / Markdown / ...)",
+    help="FMKTools — universal file format converter (PDF / Word / Markdown / ...)",
     no_args_is_help=True,
 )
 console = Console()
