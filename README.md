@@ -1,4 +1,4 @@
-# FMKTools · 工具百宝箱
+# FMKTools
 
 > FMKTools 是一个本地优先的常用小工具集合——「工具百宝箱」，面向所有人。
 > 52 个日常会用到的小工具开箱即用，仅文件转换 / 图片去水印等少数工具走 Python 后端。
@@ -204,18 +204,6 @@ nginx 统一入口：`https://yourdomain.com`，前端和 `/api/` 均经由 443 
 ```bash
 bash scripts/install-hooks.sh
 ```
-
----
-
-## 🗺️ 路线图
-
-| 阶段 | 状态     | 内容                                                                                |
-| ---- | -------- | ----------------------------------------------------------------------------------- |
-| M1   | ✅       | Python 后端 — CLI + HTTP API，5 引擎，BFS 路由                                       |
-| M2   | ✅       | FMKTools 工具百宝箱前端，shadcn 视觉，⌘K 命令面板，26 个工具                          |
-| M3   | ✅       | 进制转换 / 文字统计 / Mock 数据 / SVG 优化 / 贷款计算器 / 日期计算器 / PDF 拆分 / 代码截图，共 34 个工具 |
-| M4   | ✅       | 工具收藏 / 最近使用（localStorage 持久化）、PWA 离线模式（Service Worker + 安装横幅）  |
-| M5   | ✅       | Tauri v2 桌面壳骨架（`src-tauri/`），`TAURI=1 next build` 静态导出，文档见 `docs/TAURI.md` |
 
 ---
 
