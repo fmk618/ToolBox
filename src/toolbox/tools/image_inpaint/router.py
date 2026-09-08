@@ -7,6 +7,10 @@ import cv2
 
 router = APIRouter(tags=["image-inpaint"])
 
+# Body bytes are capped by UploadSizeLimiter in api.py, but a small compressed
+# image can still decode into gigabytes of RAM — cap the pixel count too.
+_MAX_PIXELS = 40_000_000  # ≈ 6000×6000 RGB ≈ 480 MB decoded
+
 
 @router.post("/remove")
 async def remove_region(
@@ -32,6 +36,8 @@ async def remove_region(
         raise HTTPException(400, "无法解析图片文件")
     if mask_img is None:
         raise HTTPException(400, "无法解析遮罩文件")
+    if img.shape[0] * img.shape[1] > _MAX_PIXELS:
+        raise HTTPException(413, "图片分辨率过高，请先缩小后再试")
 
     if mask_img.shape[:2] != img.shape[:2]:
         mask_img = cv2.resize(

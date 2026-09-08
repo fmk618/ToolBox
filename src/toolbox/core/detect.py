@@ -38,7 +38,8 @@ def detect_format(path: Path) -> str:
     ext = path.suffix.lower()
     fmt = EXTENSION_MAP.get(ext)
     if fmt is None:
+        # Only expose the extension, never the server-side path.
         raise UnknownFormatError(
-            f"Cannot detect format from extension: {ext or '(none)'} (path={path})"
+            f"Cannot detect format from extension: {ext or '(none)'}"
         )
     return fmt

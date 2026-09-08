@@ -17,6 +17,7 @@ from slowapi.errors import RateLimitExceeded
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import Response
 
+from .core.errors import ToolboxError
 from .core.limits import MAX_UPLOAD_BYTES, MAX_UPLOAD_MB, limiter
 from .core.settings_api import router as settings_router
 from .tools.file_convert import router as file_convert_router
@@ -54,8 +55,12 @@ _debug = os.getenv("TOOLBOX_DEBUG", "").strip() == "1"
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from .tools.file_convert.router import shutdown_executor, startup_cleanup
+
+    startup_cleanup()
     threading.Thread(target=_warmup_docling, daemon=True).start()
     yield
+    shutdown_executor()
 
 
 api = FastAPI(
@@ -79,20 +84,30 @@ async def _rate_limit_handler(request: Request, exc: RateLimitExceeded):
     return JSONResponse(
         {"detail": f"rate limit exceeded: {exc.detail}"},
         status_code=429,
-        headers={"Retry-After": "60"},
+        headers={"Retry-After": str(getattr(exc, "retry_after", 60))},
     )
+
+
+# ---- Business error mapping ----
+# Every ToolboxError carries the HTTP status it deserves; anything unexpected
+# still falls through to the default 500 without leaking stack traces.
+@api.exception_handler(ToolboxError)
+async def _toolbox_error_handler(request: Request, exc: ToolboxError):
+    return JSONResponse({"detail": str(exc)}, status_code=exc.status_code)
 
 
 # ---- Upload size cap (Content-Length precheck) ----
 class UploadSizeLimiter(BaseHTTPMiddleware):
-    """Reject POSTs hitting /tools/file-convert/convert whose Content-Length
-    exceeds MAX_UPLOAD_BYTES. Streams without Content-Length pass through;
-    the engine itself caps memory inside its temp file pipeline.
+    """Reject POSTs under /tools/ whose Content-Length exceeds MAX_UPLOAD_BYTES.
+
+    Covers every upload endpoint (file-convert /convert and /jobs,
+    image-inpaint /remove) so a new tool can't silently skip the cap. Streams
+    without Content-Length pass through; engines cap memory themselves.
     """
 
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
-        if request.method == "POST" and path.endswith("/file-convert/convert"):
+        if request.method == "POST" and path.startswith("/tools/"):
             cl = request.headers.get("content-length")
             if cl and cl.isdigit() and int(cl) > MAX_UPLOAD_BYTES:
                 return Response(
