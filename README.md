@@ -188,6 +188,13 @@ nginx 统一入口：`https://yourdomain.com`，前端和 `/api/` 均经由 443 
 | `TOOLBOX_MAX_UPLOAD_MB`    | `100`          | 上传体积上限（MB），`/tools/` 下所有 POST 统一生效        |
 | `FORWARDED_ALLOW_IPS`      | `127.0.0.1`    | 反代部署需设为代理网段（如 `172.16.0.0/12`），否则限流按代理 IP 计 |
 | `TOOLBOX_DEBUG`            | `0`            | `1` 时开启 Swagger UI（`/docs`），生产保持 `0`           |
+| `NEXT_PUBLIC_SHARE_BASE_URL` | `https://feimake.com/` | 前端构建期公开分享基址；密码二维码会打开 `<地址>/share`，必须为可从微信访问的 HTTPS 地址 |
+
+### 密码二维码分享
+
+二维码生成器的“密码分享”会把内容在发送方浏览器本地加密，再将标准 HTTPS 分享页链接写入二维码。密码须通过另一渠道发送；接收方打开 `/share` 后在自己的浏览器本地解密。密码、明文和密文 fragment 都不会提交给本项目后端。
+
+部署 Web 前端时，必须在**构建期**设置 `NEXT_PUBLIC_SHARE_BASE_URL`（Docker Compose 从 `.env` 传入；Cloudflare 等静态构建也需在构建环境变量中设置）。分享页本身需可通过公网 HTTPS 访问。此轻量分享方式不提供撤销、过期、密码找回、访问审计或服务端限速；二维码图片或截图可被任何人保存，安全性取决于密码强度与独立传递密码的渠道。
 
 ---
 
