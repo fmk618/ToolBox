@@ -48,6 +48,8 @@ services:
     build:
       context: ./web
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SHARE_BASE_URL: ${NEXT_PUBLIC_SHARE_BASE_URL:-https://feimake.com/}
     image: toolbox-web:latest
     restart: unless-stopped
     expose:
