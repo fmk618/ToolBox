@@ -1,7 +1,7 @@
 # FMKTools
 
 > FMKTools 是一个本地优先的常用小工具集合——「工具百宝箱」，面向所有人。
-> 52 个日常会用到的小工具开箱即用，仅文件转换 / 图片去水印等少数工具走 Python 后端。
+> 71 个日常会用到的小工具开箱即用，仅文件转换 / 图片去水印等少数工具走 Python 后端。
 
 [![Python](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-green.svg)](LICENSE)
@@ -21,21 +21,23 @@
 
 ---
 
-## 🛠️ 工具清单（52 个）
+## 🛠️ 工具清单（71 个）
 
 | 分类     | 工具                                                                                 | 依赖    |
 | -------- | ------------------------------------------------------------------------------------ | ------- |
 | 文件转换 | 文件格式转换 · PDF 合并 · PDF 拆分                                                    | 后端/纯前端 |
 | 编解码   | Base64 · URL · HTML 实体                                                             | 纯前端  |
 | 加密哈希 | Hash（SHA-1/256/384/512）· MD5（加密/反查）· 密码生成 · JWT 解码                       | 纯前端  |
-| 文本工具 | JSON 格式化 · YAML⇄JSON · JSON⇄CSV/XML · JSON→TypeScript 类型 · SQL 格式化 · Diff 对比 · 正则表达式（可视化）· 文字统计 · 文本批量处理 | 纯前端  |
-| 实用工具 | 计算器 · 单位换算 · 进制转换 · Mock 数据 · UUID · 二维码生成/解析 · 贷款计算器 · 养老计算器（中国）· 地址生成器 · 流程图（draw.io）· 电子签名板 · 随机抽奖 · 健康计算器 · 汇率换算 | 纯前端/联网 |
-| 时间日期 | 时间戳 · 时区换算 · 番茄钟 · Cron 表达式 · 日期计算器                                 | 纯前端  |
+| 文本工具 | Markdown 预览 · JSON 格式化 · YAML⇄JSON · JSON⇄CSV/XML · JSON→TypeScript 类型 · SQL 格式化 · Diff 对比 · 正则表达式（可视化）· 文字统计 · 文本批量处理 | 纯前端  |
+| 数据工具 | JSON Lines 检查 · XML 格式化 · CSV/TSV 表格预览                                      | 纯前端  |
+| 实用工具 | 计算器 · 单位换算 · 进制转换 · Mock 数据 · UUID · 二维码生成/解析 · 贷款计算器 · 养老计算器（中国）· 流程图编辑器 · 电子签名板 · 随机抽奖 · 健康计算器 · 汇率换算 · 百分比计算 | 纯前端/联网 |
+| 时间日期 | 时间戳 · 时区换算 · 番茄钟 · Cron 表达式 · 日期计算器 · 日期间隔与工作日       | 纯前端  |
 | 颜色数据 | Hex⇄RGB⇄HSL · WCAG 颜色对比度                                                        | 纯前端  |
-| 图片处理 | 图片压缩 · 图片格式转换（JPG/PNG/WebP/AVIF/GIF 等）· 图片转 ICO · 去除水印·文字 · SVG 优化 · 图片取色板 · EXIF 查看/清除 | 纯前端/后端 |
-| 开发工具 | 代码截图（highlight.js 语法高亮 + 2× PNG 导出）                                        | 纯前端  |
-| 网络工具 | IP 查询 / 域名解析（DoH + IP 归属地）· HTTP 状态码 / 常用端口速查 | 联网/纯前端 |
-| 系统设置 | 系统设置（后端地址 / Vision-LLM 配置 / 本地数据）                                      | 纯前端  |
+| 图片处理 | 图片压缩 · 图片格式转换（JPG/PNG/WebP/AVIF/GIF 等）· 图片转 ICO · Favicon/应用图标 · 去除水印·文字 · SVG 优化 · 图片取色板 · EXIF 查看/清除 | 纯前端/后端 |
+| 开发工具 | 代码截图（highlight.js 语法高亮 + 2× PNG 导出）· `.env` 编辑器             | 纯前端  |
+| 网络工具 | IP 查询 / 域名解析（DoH + IP 归属地）· HTTP 状态码 / 常用端口速查 · UTM 链接生成 | 联网/纯前端 |
+| 生成工具 | 条形码生成（CODE128 / EAN / UPC）                                   | 纯前端  |
+| 系统设置 | 系统设置（后端地址 / Vision-LLM 配置 / 本地数据）                    | 纯前端  |
 
 ---
 
@@ -189,6 +191,7 @@ nginx 统一入口：`https://yourdomain.com`，前端和 `/api/` 均经由 443 
 | `FORWARDED_ALLOW_IPS`      | `127.0.0.1`    | 反代部署需设为代理网段（如 `172.16.0.0/12`），否则限流按代理 IP 计 |
 | `TOOLBOX_DEBUG`            | `0`            | `1` 时开启 Swagger UI（`/docs`），生产保持 `0`           |
 | `NEXT_PUBLIC_SHARE_BASE_URL` | `https://feimake.com/` | 前端构建期公开分享基址；密码二维码会打开 `<地址>/share`，必须为可从微信访问的 HTTPS 地址 |
+| `NEXT_PUBLIC_DRAWIO_EMBED_HOST` | `https://embed.diagrams.net` | 流程图编辑器地址；可替换为合法自托管的官方发行版，页面会请求 `offline=1` 禁用云存储 |
 
 ### 密码二维码分享
 
@@ -224,5 +227,6 @@ bash scripts/install-hooks.sh
 - opendataloader-pdf — Apache-2.0（JVM 子进程调用，可选启用）
 - Pandoc — GPL-2.0+（子进程调用，不传染）
 - LibreOffice — MPL-2.0（子进程调用，不传染）
+- 流程图编辑器使用的 draw.io 引擎 — Apache-2.0（第三方归属见 [`web/THIRD-PARTY-NOTICES.md`](web/THIRD-PARTY-NOTICES.md)）
 
 > 通过子进程调用的引擎不与本项目源码静态链接，其 License 不传染到 FMKTools 自身。
