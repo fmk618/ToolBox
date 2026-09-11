@@ -24,6 +24,9 @@ dependencies = [
 # 引擎自动跳过；商用 Docker 镜像里默认装上拿 benchmark 第一档精度。
 #   uv sync --extra pdf-pro
 pdf-pro = ["opendataloader-pdf>=2.0"]
+# MinerU is intentionally opt-in: it downloads large local models and is used
+# as the preferred complex-document → Markdown engine when the CLI is present.
+mineru = ["mineru==3.4.5"]
 
 [project.scripts]
 toolbox = "toolbox.cli:app"

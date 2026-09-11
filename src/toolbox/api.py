@@ -22,6 +22,7 @@ from .core.limits import MAX_UPLOAD_BYTES, MAX_UPLOAD_MB, limiter
 from .core.settings_api import router as settings_router
 from .tools.file_convert import router as file_convert_router
 from .tools.image_inpaint import router as image_inpaint_router
+from .tools.mindmap import router as mindmap_router
 
 log = logging.getLogger("toolbox.api")
 
@@ -139,3 +140,4 @@ def health():
 api.include_router(settings_router)
 api.include_router(file_convert_router, prefix="/tools/file-convert")
 api.include_router(image_inpaint_router, prefix="/tools/image-inpaint")
+api.include_router(mindmap_router, prefix="/tools/mindmap")
