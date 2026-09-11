@@ -17,7 +17,7 @@
 | **Python 后端**       | `src/toolbox/`                                                 | 文件格式转换工具的运行时（CLI + HTTP API + 6 个转换引擎）                                  |
 | **Next.js Web 前端**  | [`web/`](https://github.com/fmk618/ToolBox-web)（子模块）       | 浏览器端 FMKTools「工具百宝箱」UI，shadcn/ui 视觉、⌘K 命令面板、大部分工具纯前端运行，少数调用后端 |
 
-后端架构上**不重复造轮子**：把社区里最好用的几个引擎（Vision-LLM、opendataloader-pdf、Docling、MarkItDown、Pandoc、LibreOffice）封装在统一接口下，用**路由图 BFS**自动选择最优转换路径。
+后端架构上**不重复造轮子**：把社区里最好用的几个引擎（MinerU、Vision-LLM、opendataloader-pdf、Docling、MarkItDown、Pandoc、LibreOffice）封装在统一接口下，用**路由图 BFS**自动选择最优转换路径。MinerU 为可选的复杂文档主解析链路；未安装或运行失败时自动回退到现有引擎。
 
 ---
 
@@ -55,10 +55,10 @@
        │  core/engines_graph.py (BFS 路由) │ ← 根据 (from, to) 找最短转换链
        └──────────────┬───────────────────┘
                       ▼
-   ┌─────────────┬────────────────────┬──────────┬────────────┬────────┬──────────────┐
-   │  Vision-LLM │ opendataloader-pdf │  Docling │ MarkItDown │ Pandoc │ LibreOffice  │
-   │   (云端)    │   (Java 子进程)    │  (本地)  │  (Python)  │ (子进程)│   (子进程)   │
-   └─────────────┴────────────────────┴──────────┴────────────┴────────┴──────────────┘
+   ┌─────────────┬────────┬────────────────────┬──────────┬────────────┬────────┬──────────────┐
+   │   MinerU    │ Vision │ opendataloader-pdf │  Docling │ MarkItDown │ Pandoc │ LibreOffice  │
+   │ (可选本地)  │ (云端) │    (Java 子进程)   │  (本地)  │  (Python)  │ (子进程)│   (子进程)   │
+   └─────────────┴────────┴────────────────────┴──────────┴────────────┴────────┴──────────────┘
 ```
 
 每个引擎自己声明能做哪些 `(源格式, 目标格式)` 边；启动时探测可用性，构建有向图；调用时 BFS 找最短路径，自动多步串联。**任何引擎缺依赖都自动跳过，不影响其余引擎工作**。
@@ -93,6 +93,8 @@ URL 命名空间按工具 slug 隔离：
 | `POST`   | `/tools/file-convert/convert?to=<fmt>`  | （遗留）同步转换，返回转换后文件                   |
 | `GET`    | `/providers`                            | 列出支持的 Vision-LLM Provider                    |
 | `POST`   | `/settings/llm/test`                    | 测试 LLM 凭据是否能跑通（密钥随请求传递，不存储）   |
+| `GET`    | `/tools/mindmap/templates`              | 列出思维导图 AI 模板                              |
+| `POST`   | `/tools/mindmap/generate`               | 生成/追加/整理思维导图（先预览，密钥随请求传递）      |
 
 ```bash
 # 命令行调用示例：异步转换 = 提交 → 轮询 → 下载
@@ -125,12 +127,16 @@ toolbox/
     │   ├── providers.py               # LLM Provider 目录
     │   └── settings_api.py            # /settings/llm + /providers Router
     ├── tools/
-    │   └── file_convert/
+    │   ├── file_convert/
+    │   │   ├── __init__.py
+    │   │   └── router.py              # /tools/file-convert/* Router
+    │   └── mindmap/
     │       ├── __init__.py
-    │       └── router.py              # /tools/file-convert/* Router
+    │       └── router.py              # /tools/mindmap/* AI Router
     └── engines/
         ├── base.py                    # 引擎抽象基类
         ├── markitdown.py              # MarkItDown 适配器（任意 → MD）
+        ├── mineru.py                  # MinerU 适配器（可选复杂文档 → MD）
         ├── docling.py                 # Docling 适配器（本地 PDF → MD，高质量）
         ├── opendataloader.py          # opendataloader-pdf 适配器（PDF → MD/JSON/HTML，benchmark #1）
         ├── pandoc.py                  # Pandoc 适配器（MD ↔ DOCX/HTML/...）
@@ -160,6 +166,7 @@ toolbox/
 
 | 引擎                    | 协议       | 用途                                                | 安装方式                                             |
 | ----------------------- | ---------- | --------------------------------------------------- | ---------------------------------------------------- |
+| **MinerU 3.4.5**       | Apache-2.0 + 附加条款 | 可选本地复杂文档解析：PDF/图片/DOCX/PPTX/XLSX→Markdown；失败自动降级 | `uv sync --extra mineru`（会下载较大模型） |
 | **Vision-LLM**          | —          | 云端视觉大模型 PDF→Markdown，质量最高               | 前端设置页填 API Key                                 |
 | **opendataloader-pdf**  | Apache-2.0 | 本地 Java 引擎，PDF→MD benchmark #1（0.907）         | `brew install openjdk@17 && uv sync --extra pdf-pro` |
 | **Docling**             | MIT        | 本地 ML 模型 PDF→Markdown，无需联网                  | `uv sync` 自动装                                     |
@@ -168,6 +175,10 @@ toolbox/
 | **LibreOffice**         | MPL-2.0    | Office 文档高保真转 PDF（事实标准）                   | 系统包管理器                                         |
 
 > Pandoc / LibreOffice / opendataloader-pdf 通过子进程调用（其中 opendataloader 经 JVM），不与本项目源码静态链接，使用上不传染 License。
+>
+> MinerU 是可选的本地复杂文档解析器，支持 PDF、图片、DOCX、PPTX、XLSX，不是只处理 Markdown：这些文件可解析为 Markdown、结构化 JSON 及布局结果，本项目只从其临时输出目录选择白名单 Markdown 产物。MinerU 未安装、模型未准备、超时或失败时会自动交给旧引擎。首次运行会下载模型并消耗较多内存、磁盘；不要把未认证的 MinerU API 暴露到公网，也不要从浏览器传入远程服务地址。
+>
+> 思维导图 AI 助手复用系统设置中的模型配置，支持生成新图、追加到选中节点和整理当前导图。发送当前导图前请确认其中没有不应交给第三方模型的隐私内容；密钥只随请求传递，不进入 `NEXT_PUBLIC_*`、导图快照、日志或服务端持久化。
 
 ---
 
@@ -191,7 +202,7 @@ nginx 统一入口：`https://yourdomain.com`，前端和 `/api/` 均经由 443 
 | `TOOLBOX_RATE_LIMIT`       | `20/minute`    | 文件转换接口每 IP 限流，slowapi 语法。空串关闭           |
 | `TOOLBOX_MAX_UPLOAD_MB`    | `100`          | 上传体积上限（MB），`/tools/` 下所有 POST 统一生效        |
 | `FORWARDED_ALLOW_IPS`      | `127.0.0.1`    | 反代部署需设为代理网段（如 `172.16.0.0/12`），否则限流按代理 IP 计 |
-| `TOOLBOX_DEBUG`            | `0`            | `1` 时开启 Swagger UI（`/docs`），生产保持 `0`           |
+| `TOOLBOX_MINERU_BIN`       | `mineru`       | 可选 MinerU CLI 路径；仅读取服务端部署配置，不接受浏览器传入远程地址 |
 | `NEXT_PUBLIC_SHARE_BASE_URL` | `https://feimake.com/` | 前端构建期公开分享基址；密码二维码会打开 `<地址>/share`，必须为可从微信访问的 HTTPS 地址 |
 | `NEXT_PUBLIC_DRAWIO_EMBED_HOST` | `https://embed.diagrams.net` | 流程图编辑器地址；可替换为合法自托管的官方发行版，页面会请求 `offline=1` 禁用云存储 |
 
@@ -224,7 +235,7 @@ bash scripts/install-hooks.sh
 本项目采用 **Apache License 2.0**。完整许可证见 [LICENSE](LICENSE)。
 
 底层依赖的引擎各自的 License：
-- MarkItDown — MIT
+- MinerU 3.4.5 — Apache-2.0 及其发行版附加条款（可选子进程/本地模型；完整说明见 [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md)）
 - Docling — MIT
 - opendataloader-pdf — Apache-2.0（JVM 子进程调用，可选启用）
 - Pandoc — GPL-2.0+（子进程调用，不传染）

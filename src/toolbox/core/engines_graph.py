@@ -5,20 +5,18 @@ from ..engines.base import Engine
 from ..engines.docling import DoclingEngine
 from ..engines.libreoffice import LibreOfficeEngine
 from ..engines.markitdown import MarkItDownEngine
+from ..engines.mineru import MinerUEngine
 from ..engines.opendataloader import OpenDataLoaderEngine
 from ..engines.pandoc import PandocEngine
 from ..engines.pillow import PillowEngine
 from ..engines.vision_llm import VisionLLMEngine
 
 # Order matters: earlier engines win when multiple engines claim the same edge.
-# For PDF→MD/HTML: VisionLLM > OpenDataLoader > Docling > MarkItDown.
-# If the preferred engine fails at runtime, pipeline.convert() tries the next
-# engine in the list for that hop (graceful fallback).
-# Each engine is auto-skipped when its dependency is missing:
-#   VisionLLM       ← provider + key configured in /settings/llm
-#   OpenDataLoader  ← Java 11+ on PATH + opendataloader-pdf package
-#   Docling / MarkItDown ← pure Python, always available after uv sync
+# For complex documents → Markdown: MinerU > VisionLLM > OpenDataLoader > Docling > MarkItDown.
+# MinerU is optional; if it is missing or fails, the existing engines continue.
+# For PDF→HTML, VisionLLM remains the direct rich-output route.
 ENGINES: list[Engine] = [
+    MinerUEngine(),
     VisionLLMEngine(),
     OpenDataLoaderEngine(),
     DoclingEngine(),
