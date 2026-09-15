@@ -182,37 +182,9 @@ toolbox/
 
 ---
 
-## 🚀 部署
+## 🌐 在线演示
 
-```bash
-git clone --recurse-submodules https://github.com/fmk618/ToolBox.git
-cd ToolBox
-cp .env.product .env          # 按需修改变量
-# 替换 nginx.conf 中的 yourdomain.com
-# 首次申请 TLS 证书（见 nginx.conf 注释）
-docker compose up -d --build
-```
-
-nginx 统一入口：`https://yourdomain.com`，前端和 `/api/` 均经由 443 代理。
-
-### 关键环境变量
-
-生产环境推荐采用 **Cloudflare Pages + 腾讯云 API + GitHub Actions** 的混合部署方式。完整的服务器初始化、Cloudflare Tunnel、Tailscale SSH、GHCR 和自动回滚步骤见 [GitHub Actions + Cloudflare Pages + 腾讯云部署教程](docs/GITHUB-ACTIONS-CLOUDFLARE.md)。
-
-| 变量                       | 默认           | 说明                                                    |
-| -------------------------- | -------------- | ------------------------------------------------------- |
-| `TOOLBOX_RATE_LIMIT`       | `20/minute`    | 文件转换接口每 IP 限流，slowapi 语法。空串关闭           |
-| `TOOLBOX_MAX_UPLOAD_MB`    | `100`          | 上传体积上限（MB），`/tools/` 下所有 POST 统一生效        |
-| `FORWARDED_ALLOW_IPS`      | `127.0.0.1`    | 反代部署需设为代理网段（如 `172.16.0.0/12`），否则限流按代理 IP 计 |
-| `TOOLBOX_MINERU_BIN`       | `mineru`       | 可选 MinerU CLI 路径；仅读取服务端部署配置，不接受浏览器传入远程地址 |
-| `NEXT_PUBLIC_SHARE_BASE_URL` | `https://feimake.com/` | 前端构建期公开分享基址；密码二维码会打开 `<地址>/share`，必须为可从微信访问的 HTTPS 地址 |
-| `NEXT_PUBLIC_DRAWIO_EMBED_HOST` | `https://embed.diagrams.net` | 流程图编辑器地址；可替换为合法自托管的官方发行版，页面会请求 `offline=1` 禁用云存储 |
-
-### 密码二维码分享
-
-二维码生成器的“密码分享”会把内容在发送方浏览器本地加密，再将标准 HTTPS 分享页链接写入二维码。密码须通过另一渠道发送；接收方打开 `/share` 后在自己的浏览器本地解密。密码、明文和密文 fragment 都不会提交给本项目后端。
-
-部署 Web 前端时，必须在**构建期**设置 `NEXT_PUBLIC_SHARE_BASE_URL`（Docker Compose 从 `.env` 传入；Cloudflare 等静态构建也需在构建环境变量中设置）。分享页本身需可通过公网 HTTPS 访问。此轻量分享方式不提供撤销、过期、密码找回、访问审计或服务端限速；二维码图片或截图可被任何人保存，安全性取决于密码强度与独立传递密码的渠道。
+在线体验：<https://feimake.com>
 
 ---
 
