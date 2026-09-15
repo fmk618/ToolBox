@@ -23,6 +23,9 @@ from .core.settings_api import router as settings_router
 from .tools.file_convert import router as file_convert_router
 from .tools.image_inpaint import router as image_inpaint_router
 from .tools.mindmap import router as mindmap_router
+from .tools.video_extract import router as video_extract_router
+from .tools.audio_convert import router as audio_convert_router
+from .tools.video_edit import router as video_edit_router
 
 log = logging.getLogger("toolbox.api")
 
@@ -59,9 +62,13 @@ async def lifespan(app: FastAPI):
     from .tools.file_convert.router import shutdown_executor, startup_cleanup
 
     startup_cleanup()
+    from .core.media import manager as media_manager
+
+    media_manager.startup_cleanup()
     threading.Thread(target=_warmup_docling, daemon=True).start()
     yield
     shutdown_executor()
+    media_manager.shutdown()
 
 
 api = FastAPI(
@@ -141,3 +148,6 @@ api.include_router(settings_router)
 api.include_router(file_convert_router, prefix="/tools/file-convert")
 api.include_router(image_inpaint_router, prefix="/tools/image-inpaint")
 api.include_router(mindmap_router, prefix="/tools/mindmap")
+api.include_router(video_extract_router, prefix="/tools/video-extract")
+api.include_router(audio_convert_router, prefix="/tools/audio-convert")
+api.include_router(video_edit_router, prefix="/tools/video-edit")

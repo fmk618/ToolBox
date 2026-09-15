@@ -30,11 +30,13 @@ ENV PYTHONUNBUFFERED=1 \
 # - openjdk-17-jre-headless：opendataloader-pdf 引擎需要 JVM（benchmark
 #   第一档 PDF→MD 准确率 0.907）
 # - curl / ca-certificates：拉 uv 安装脚本与 Docling 模型
+# - ffmpeg：音视频转换、裁剪与探测（同时提供 ffprobe）
 # - tini：稳健的 PID 1，转 SIGTERM 不留僵尸进程
 RUN apt-get update && apt-get install -y --no-install-recommends \
         pandoc \
         libmagic1 \
         openjdk-17-jre-headless \
+        ffmpeg \
         curl \
         ca-certificates \
         tini \
