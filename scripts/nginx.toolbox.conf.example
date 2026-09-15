@@ -9,7 +9,7 @@
 #   两个服务都在同台机器，FMKTools 容器通过 docker-compose 起。
 #
 # HTTPS：建议同时跑 certbot --nginx 自动配 Let's Encrypt 证书。
-# Caddy 版本见 docs/DEPLOYMENT.md「路径三」。
+# 推荐的 Cloudflare Pages + Tunnel + GHCR 自动部署流程见 docs/GITHUB-ACTIONS-CLOUDFLARE.md。
 
 # ---------- 共享：rate-limit zone ----------
 # 给 file-convert 上传单独限流，避免单 IP 把后端打满。
