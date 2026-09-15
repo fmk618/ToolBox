@@ -197,6 +197,8 @@ nginx 统一入口：`https://yourdomain.com`，前端和 `/api/` 均经由 443 
 
 ### 关键环境变量
 
+生产环境推荐采用 **Cloudflare Pages + 腾讯云 API + GitHub Actions** 的混合部署方式。完整的服务器初始化、Cloudflare Tunnel、Tailscale SSH、GHCR 和自动回滚步骤见 [GitHub Actions + Cloudflare Pages + 腾讯云部署教程](docs/GITHUB-ACTIONS-CLOUDFLARE.md)。
+
 | 变量                       | 默认           | 说明                                                    |
 | -------------------------- | -------------- | ------------------------------------------------------- |
 | `TOOLBOX_RATE_LIMIT`       | `20/minute`    | 文件转换接口每 IP 限流，slowapi 语法。空串关闭           |

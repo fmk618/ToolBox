@@ -22,3 +22,15 @@ class EngineNotAvailableError(ToolboxError):
 
 class ConversionFailedError(ToolboxError):
     status_code = 400
+
+
+class MediaValidationError(ToolboxError):
+    status_code = 422
+
+
+class MediaUnavailableError(ToolboxError):
+    status_code = 503
+
+
+class MediaProcessingError(ToolboxError):
+    status_code = 400

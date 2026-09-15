@@ -2,6 +2,8 @@
 
 FMKTools（工具百宝箱）支持两条等价的部署路径：
 
+> 如果你的目标是“GitHub 推送后自动更新”，请直接使用 [GitHub Actions + Cloudflare Pages + 腾讯云部署教程](GITHUB-ACTIONS-CLOUDFLARE.md)。该方案让 Cloudflare Pages 托管前端、腾讯云只运行 API/FFmpeg，并通过 GHCR 与 Tailscale SSH 自动更新。
+
 1. **自托管**：任何人 clone 后在自己机器 / 服务器一键起
 2. **商用 SaaS**：作者把同一份代码部署到生产域名（例：`tools.example.com`）
 

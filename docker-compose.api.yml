@@ -1,0 +1,39 @@
+# 生产环境 API 服务。前端部署到 Cloudflare Pages，服务器只运行此文件。
+services:
+  api:
+    image: ${TOOLBOX_API_IMAGE:-ghcr.io/fmk618/toolbox-api:latest}
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${TOOLBOX_API_PORT:-8000}:8000"
+    environment:
+      TOOLBOX_ALLOWED_ORIGINS: ${TOOLBOX_ALLOWED_ORIGINS:?set the Cloudflare Pages origin}
+      TOOLBOX_RATE_LIMIT: ${TOOLBOX_RATE_LIMIT:-20/minute}
+      TOOLBOX_MAX_UPLOAD_MB: ${TOOLBOX_MAX_UPLOAD_MB:-100}
+      TOOLBOX_MEDIA_DIR: /data/media-tmp
+      TOOLBOX_MEDIA_MAX_PENDING: ${TOOLBOX_MEDIA_MAX_PENDING:-4}
+      TOOLBOX_MEDIA_JOB_TTL: ${TOOLBOX_MEDIA_JOB_TTL:-1800}
+      TOOLBOX_MEDIA_MAX_INPUT_MB: ${TOOLBOX_MEDIA_MAX_INPUT_MB:-200}
+      TOOLBOX_MEDIA_MAX_DOWNLOAD_MB: ${TOOLBOX_MEDIA_MAX_DOWNLOAD_MB:-500}
+      TOOLBOX_MEDIA_MAX_DURATION_SECONDS: ${TOOLBOX_MEDIA_MAX_DURATION_SECONDS:-7200}
+      TOOLBOX_DATA_DIR: /data
+      HF_HOME: /data/huggingface
+      DOCLING_CACHE: /data/docling
+      FORWARDED_ALLOW_IPS: ${FORWARDED_ALLOW_IPS:-172.16.0.0/12}
+    volumes:
+      - toolbox_data:/data
+    command: ["toolbox", "serve", "--host", "0.0.0.0", "--port", "8000"]
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "python",
+          "-c",
+          "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health').read()",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 60s
+
+volumes:
+  toolbox_data:
